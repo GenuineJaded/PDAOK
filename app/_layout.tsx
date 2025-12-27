@@ -1,4 +1,4 @@
-import { AppProvider } from './context/AppContext';
+import { AppProvider } from './_context/AppContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import * as Font from 'expo-font';
@@ -15,7 +15,7 @@ LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
 ]);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorBoundary } from './_components/ErrorBoundary';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 

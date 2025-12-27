@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 
-import { Ally, ColorScheme, ContainerId } from '../constants/Types';
+import { Ally, ColorScheme, ContainerId } from '../_constants/Types';
 
 // --- AddAllyModal (Existing) ---
 

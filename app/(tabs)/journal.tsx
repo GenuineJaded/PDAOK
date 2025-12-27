@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
-import useColors from '../hooks/useColors';
-import { JournalList } from '../components/JournalList';
-import { JournalEntryModal } from '../components/JournalEntryModal';
+import { useApp } from '../_context/AppContext';
+import useColors from '../_hooks/useColors';
+import { JournalList } from '../_components/JournalList';
+import { JournalEntryModal } from '../_components/JournalEntryModal';
 
 export default function JournalScreen() {
   const { activeContainer, journalEntries } = useApp();

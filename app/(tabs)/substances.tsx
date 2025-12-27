@@ -8,14 +8,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
-import useColors from '../hooks/useColors';
-import { useTransmissions } from '../hooks/useTransmissions';
-import { AllyCard } from '../components/AllyCard';
+import { useApp } from '../_context/AppContext';
+import useColors from '../_hooks/useColors';
+import { useTransmissions } from '../_hooks/useTransmissions';
+import { AllyCard } from '../_components/AllyCard';
 // ⧈replace-start:imports
 import { AddAllyModal, EditAllyModal } from '../modal';
-import { SubstanceSynthesisModal } from '../modal/SubstanceSynthesisModal';
-import { JournalEntryModal } from '../components/JournalEntryModal';
+import { SubstanceSynthesisModal } from '../_modal/SubstanceSynthesisModal';
+import { JournalEntryModal } from '../_components/JournalEntryModal';
 // ⧈replace-end:imports
 
 export default function SubstancesScreen() {
