@@ -609,7 +609,13 @@ export default function HomeScreen() {
                 setSelectedItem(null);
                 setIsEditMode(false);
               }}
-              onAlignFlow={() => markAsAligned(selectedItem.id)}
+              onAlignFlow={() => {
+                markAsAligned(selectedItem.id);
+                // Show ShiftToast for Align Flow completion
+                setTimeout(() => {
+                  setShowShiftToast(true);
+                }, 300);
+              }}
               isEditMode={isEditMode}
               onSave={(updatedItem) => {
                 updateItem(updatedItem.id, updatedItem);

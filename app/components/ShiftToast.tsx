@@ -10,7 +10,7 @@ interface ShiftToastProps {
 }
 
 // Single static message for Align Flow completion
-const warmExhaleMessage = 'Completion hums softly through the weave.';
+const warmExhaleMessage = 'Presence clicks into place; carry on.';
 
 // Get time-of-day background color for toast
 const getToastBackground = (container: ContainerId) => {
