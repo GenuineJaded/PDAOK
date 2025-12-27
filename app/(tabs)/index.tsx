@@ -569,6 +569,7 @@ export default function HomeScreen() {
         <CraftMomentModal
           isVisible={isCraftMomentModalVisible}
           onClose={() => setIsCraftMomentModalVisible(false)}
+          container={activeContainer}
           onSave={(title, body, container) => {
             // Create a Moment (journal entry) instead of an Item (anchor)
             const newMoment: Omit<import('../constants/Types').Moment, 'id' | 'timestamp' | 'date'> = {
