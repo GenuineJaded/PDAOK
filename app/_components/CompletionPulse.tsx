@@ -26,13 +26,13 @@ export const CompletionPulse: React.FC<CompletionPulseProps> = ({
         // Expand outward like an exhale
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 1200,
           useNativeDriver: true,
         }),
         // Fade out gently
         Animated.timing(opacityAnim, {
           toValue: 0,
-          duration: 800,
+          duration: 1200,
           useNativeDriver: true,
         }),
       ]).start(() => {
