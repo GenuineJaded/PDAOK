@@ -569,15 +569,20 @@ export default function HomeScreen() {
         <CraftMomentModal
           isVisible={isCraftMomentModalVisible}
           onClose={() => setIsCraftMomentModalVisible(false)}
-          onSave={(title, container, category, body_cue, micro, desire) => {
-            addItem({
-              title,
-              container,
-              category,
-              body_cue,
-              micro,
-              desire,
-            });
+          onSave={(title, body, container) => {
+            // Create a Moment (journal entry) instead of an Item (anchor)
+            const newMoment: Omit<import('../constants/Types').Moment, 'id' | 'timestamp' | 'date'> = {
+              text: body,
+              container: container,
+              tone: '',
+              frequency: '',
+              presence: '',
+              context: '',
+              action_reflection: '',
+              result_shift: '',
+              conclusion_offering: '',
+            };
+            addMoment(newMoment);
             // Trigger bloom effect
             setShowBloomEffect(true);
           }}
