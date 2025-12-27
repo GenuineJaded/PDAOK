@@ -616,10 +616,11 @@ export default function HomeScreen() {
               }}
               onAlignFlow={() => {
                 markAsAligned(selectedItem.id);
-                // Show ShiftToast for Align Flow completion
+                // Show ring pulse (breath), then ShiftToast after 1.5s to match other actions
+                setShowRingPulse(true);
                 setTimeout(() => {
                   setShowShiftToast(true);
-                }, 300);
+                }, 1500);
               }}
               isEditMode={isEditMode}
               onSave={(updatedItem) => {
