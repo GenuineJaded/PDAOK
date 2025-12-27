@@ -616,8 +616,8 @@ export default function HomeScreen() {
               }}
               onAlignFlow={() => {
                 markAsAligned(selectedItem.id);
-                // Show ring pulse (breath), then ShiftToast after 1.5s to match other actions
-                setShowRingPulse(true);
+                // Show completion pulse (filled circle), then ShiftToast after 1.5s
+                setShowCompletionPulse(true);
                 setTimeout(() => {
                   setShowShiftToast(true);
                 }, 1500);
