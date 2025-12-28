@@ -9,10 +9,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { loadAllJournals, AgentJournal, JournalEntry } from '../_services/agentJournal';
 import { VoiceName } from '../_services/fieldArbiter';
-import { useTheme } from '../_context/ThemeContext';
+import useColors from '../_hooks/useColors';
 
 export default function AgentJournalDebug() {
-  const { colors } = useTheme();
+  const colors = useColors();
   const [journals, setJournals] = useState<Record<VoiceName, AgentJournal> | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>('GreenGodmother');
   const [loading, setLoading] = useState(true);
