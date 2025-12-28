@@ -163,7 +163,7 @@ export async function generateInsight(prompt: string): Promise<string> {
           ],
           generationConfig: {
             temperature: 0.8,
-            maxOutputTokens: 100,
+            maxOutputTokens: 500,
           },
         }),
       }

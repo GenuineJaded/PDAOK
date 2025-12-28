@@ -48,7 +48,7 @@ export const DailySynthesisModal = ({ visible, onClose, colors }: Props) => {
 
   return (
     <Modal isVisible={visible} onClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Daily Synthesis</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
