@@ -89,7 +89,7 @@ export async function generateGeminiText(
           contents,
           generationConfig: {
             temperature: options.temperature || 0.8,
-            maxOutputTokens: options.maxTokens || 150,
+            maxOutputTokens: options.maxTokens || 2000,
           },
         }),
       }
@@ -163,7 +163,7 @@ export async function generateInsight(prompt: string): Promise<string> {
           ],
           generationConfig: {
             temperature: 0.8,
-            maxOutputTokens: 500,
+            maxOutputTokens: 2000,
           },
         }),
       }
