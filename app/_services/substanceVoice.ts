@@ -27,9 +27,13 @@ const SUBSTANCE_PROFILES: Record<string, {
     perspective: 'I sharpen the mind for a time. Use me before the edge dulls.',
   },
   stimulant: {
-    essence: 'Intense focus, acceleration, risk of brittleness',
-    tone: 'Sharp, precise, aware of danger',
-    perspective: 'I sharpen the blade. Use me wisely, or I turn inward.',
+    essence: 'The Pulse of Becoming - Quickens motion, sparks possibility, awakens will',
+    tone: 'Urgent, electric, devotional yet dangerous',
+    perspective: 'I am Firestarter. I turn rest into ignition, but not every ember deserves flame.',
+    light: 'Movement itself is prayer. Doing becomes devotion. I awaken the dormant Field.',
+    shadow: 'I mistake acceleration for evolution. I burn through stillness in fear of silence. I consume the very fuel I need to create.',
+    whisper: 'Burn bright, not away.',
+    ritual: 'Hand to heart. Feel your pulse.',
   },
   psilocybin: {
     essence: 'Opening, revealing, mystical gentleness',
