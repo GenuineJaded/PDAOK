@@ -261,6 +261,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     setSubstanceJournalEntries(prev => [newMoment, ...prev]);
 
+    // Notify Field Arbiter of substance logging event
+    (async () => {
+      const { processEvent, logDecision } = await import('../_services/fieldArbiter');
+      const decision = await processEvent({
+        event: 'SUBSTANCE_LOGGED',
+        metadata: {
+          substanceName: newMoment.allyName || 'unknown',
+          momentId: newMoment.id,
+        },
+      });
+      logDecision({ event: 'SUBSTANCE_LOGGED', metadata: { substanceName: newMoment.allyName } }, decision);
+      
+      // If allowed, voice generation would happen here (future integration)
+      // For now, just logging the decision
+    })();
+
     // Update ally log if an ally was involved
     if (newMoment.allyId) {
       setAllies(prevAllies => prevAllies.map(ally => {
