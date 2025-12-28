@@ -191,10 +191,9 @@ export function AddMovementModal({ isVisible, onClose, onAdd, colors }: Props) {
               style={[
                 styles.button,
                 styles.saveButton,
-                { backgroundColor: colors.accent, opacity: !act.trim() ? 0.5 : 1 }
+                { backgroundColor: colors.accent }
               ]}
               onPress={handleSave}
-              disabled={!act.trim()}
             >
               <Text style={[styles.buttonText, { color: colors.card }]}>
                 Log Movement
