@@ -42,6 +42,7 @@ export default function SubstancesScreen() {
   const [isJournalEntryModalVisible, setIsJournalEntryModalVisible] = useState(false);
   const [isPersonalLogExpanded, setIsPersonalLogExpanded] = useState(false);
   const [isTransmissionsExpanded, setIsTransmissionsExpanded] = useState(false);
+  const [expandedSubstances, setExpandedSubstances] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     console.log('=== MODAL STATE CHANGED ===');
@@ -127,68 +128,96 @@ export default function SubstancesScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* Tier 2: Expanded List */}
+        {/* Tier 2: Expanded List - Grouped by Substance */}
         {isPersonalLogExpanded && (
           <View style={[styles.tierList, { backgroundColor: colors.card + 'B3' }]}>
             {substanceJournalEntries.length === 0 ? (
               <Text style={[styles.emptyText, { color: colors.dim }]}>
                 No personal substance logs yet. Log your first interaction to begin.
               </Text>
-            ) : (
-              substanceJournalEntries.slice(0, 10).map((entry) => {
-                const preview = entry.tone || entry.frequency || entry.allyName || 'Substance Moment';
-                const fullContent = `${entry.allyName || 'Substance Moment'}\n\nIntention: ${entry.tone || 'Not specified'}\nSensation: ${entry.frequency || 'Not specified'}\nReflection: ${entry.presence || 'Not specified'}\n\nSynthesis & Invocation:\n${entry.context || 'None'}`;
-                const formattedDate = new Date(entry.date).toLocaleDateString();
+            ) : (() => {
+              // Group entries by substance name
+              const groupedEntries = substanceJournalEntries.reduce((acc, entry) => {
+                const substanceName = entry.allyName || 'Unknown Substance';
+                if (!acc[substanceName]) {
+                  acc[substanceName] = [];
+                }
+                acc[substanceName].push(entry);
+                return acc;
+              }, {} as Record<string, typeof substanceJournalEntries>);
+              
+              // Sort substance names alphabetically
+              const sortedSubstances = Object.keys(groupedEntries).sort();
+              
+              return sortedSubstances.map((substanceName) => {
+                const entries = groupedEntries[substanceName];
+                const isExpanded = expandedSubstances.has(substanceName);
                 
                 return (
-                  <TouchableOpacity
-                    key={entry.id}
-                    style={[styles.entryRow, { borderBottomColor: colors.dim + '33' }]}
-                    onPress={() => {
-                      try {
-                        console.log('=== SUBSTANCES TAP START ===');
-                        console.log('Entry ID:', entry.id);
-                        console.log('Entry date:', entry.date);
-                        console.log('Formatted date:', formattedDate);
-                        console.log('Full content length:', fullContent.length);
-                        console.log('Setting modal entry...');
-                        
-                        setSelectedJournalEntry({
-                          title: 'Substance Reflection',
-                          date: formattedDate,
-                          content: fullContent,
+                  <View key={substanceName}>
+                    {/* Tier 3: Substance Group Header */}
+                    <TouchableOpacity
+                      style={[styles.substanceGroupHeader, { backgroundColor: colors.bg + '80' }]}
+                      onPress={() => {
+                        setExpandedSubstances(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(substanceName)) {
+                            newSet.delete(substanceName);
+                          } else {
+                            newSet.add(substanceName);
+                          }
+                          return newSet;
                         });
-                        
-                        console.log('Modal entry set, opening modal...');
-                        setIsJournalEntryModalVisible(true);
-                        console.log('=== SUBSTANCES TAP END ===');
-                      } catch (error) {
-                        console.error('=== ERROR IN TAP HANDLER ===');
-                        console.error('Error:', error);
-                        console.error('Error message:', error.message);
-                        console.error('Error stack:', error.stack);
-                      }
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.entryContent} pointerEvents="none">
-                      <Text style={[styles.entryDate, { color: colors.dim }]}>
-                        {new Date(entry.date).toLocaleDateString()}
+                      }}
+                    >
+                      <Text style={[styles.substanceGroupName, { color: colors.text }]}>
+                        {substanceName}
                       </Text>
-                      <Text style={[styles.entryPreview, { color: colors.text }]} numberOfLines={1}>
-                        {preview}
+                      <Text style={[styles.substanceGroupCount, { color: colors.dim }]}>
+                        {entries.length} {isExpanded ? '▼' : '▶'}
                       </Text>
-                    </View>
-                    <Text style={[styles.entryArrow, { color: colors.dim }]} pointerEvents="none">›</Text>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                    
+                    {/* Tier 4: Individual Entries */}
+                    {isExpanded && entries.map((entry) => {
+                      const preview = entry.tone || entry.frequency || 'Substance Moment';
+                      const fullContent = `${entry.allyName || 'Substance Moment'}\n\nIntention: ${entry.tone || 'Not specified'}\nSensation: ${entry.frequency || 'Not specified'}\nReflection: ${entry.presence || 'Not specified'}\n\nSynthesis & Invocation:\n${entry.context || 'None'}`;
+                      const formattedDate = new Date(entry.date).toLocaleDateString();
+                      
+                      return (
+                        <TouchableOpacity
+                          key={entry.id}
+                          style={[styles.entryRow, styles.nestedEntry, { borderBottomColor: colors.dim + '33' }]}
+                          onPress={() => {
+                            try {
+                              setSelectedJournalEntry({
+                                title: 'Substance Reflection',
+                                date: formattedDate,
+                                content: fullContent,
+                              });
+                              setIsJournalEntryModalVisible(true);
+                            } catch (error) {
+                              console.error('Error opening journal entry:', error);
+                            }
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.entryContent} pointerEvents="none">
+                            <Text style={[styles.entryDate, { color: colors.dim }]}>
+                              {new Date(entry.date).toLocaleDateString()}
+                            </Text>
+                            <Text style={[styles.entryPreview, { color: colors.text }]} numberOfLines={1}>
+                              {preview}
+                            </Text>
+                          </View>
+                          <Text style={[styles.entryArrow, { color: colors.dim }]} pointerEvents="none">›</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 );
-              })
-            )}
-            {substanceJournalEntries.length > 10 && (
-              <Text style={[styles.moreText, { color: colors.dim }]}>
-                Showing 10 most recent of {substanceJournalEntries.length} total
-              </Text>
-            )}
+              });
+            })()}
           </View>
         )}
 
@@ -390,6 +419,23 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 12,
   },
+  substanceGroupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  substanceGroupName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  substanceGroupCount: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,6 +444,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     minHeight: 60,
+  },
+  nestedEntry: {
+    paddingLeft: 20,
   },
   entryContent: {
     flex: 1,
