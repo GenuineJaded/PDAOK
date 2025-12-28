@@ -261,9 +261,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     setSubstanceJournalEntries(prev => [newMoment, ...prev]);
 
-    // Notify Field Arbiter of substance logging event
+    // Notify Field Arbiter and write agent journal entry
     (async () => {
       const { processEvent, logDecision } = await import('../_services/fieldArbiter');
+      const { writeJournalEntry, generateSubstanceObservation } = await import('../_services/agentJournal');
+      
+      // Process through arbiter
       const decision = await processEvent({
         event: 'SUBSTANCE_LOGGED',
         metadata: {
@@ -273,8 +276,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       logDecision({ event: 'SUBSTANCE_LOGGED', metadata: { substanceName: newMoment.allyName } }, decision);
       
-      // If allowed, voice generation would happen here (future integration)
-      // For now, just logging the decision
+      // Write private journal entry (Phase 1: always write, regardless of arbiter decision)
+      if (decision.voice) {
+        const template = generateSubstanceObservation(
+          decision.voice,
+          newMoment.allyName || 'unknown',
+          newMoment.text
+        );
+        
+        await writeJournalEntry(
+          decision.voice,
+          template.observation,
+          {
+            context: newMoment.allyName,
+            sentiment: template.sentiment,
+            eventType: 'SUBSTANCE_LOGGED',
+          }
+        );
+      }
+      
+      // Phase 2 (future): If arbiter allows, promote journal entry to public output
     })();
 
     // Update ally log if an ally was involved
