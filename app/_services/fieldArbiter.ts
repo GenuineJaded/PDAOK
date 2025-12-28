@@ -1,8 +1,10 @@
 /**
- * Field Arbiter - The Coordination Layer
+ * Field Arbiter v0.2 - The Coordination Layer
  * 
  * Lightweight traffic controller that decides when and where AI voices speak.
  * Prevents overlap, maintains rhythm, creates coherent system behavior.
+ * 
+ * Design principle: Silence is success. Default is NO unless explicit rule says YES.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,27 +31,28 @@ export type FieldEvent =
  * AI voices that can speak
  */
 export type VoiceName =
-  | 'Witness'           // The Field itself
+  | 'Witness'           // The Field itself (meta-observer)
   | 'GreenGodmother'    // Cannabis
   | 'Firestarter'       // Stimulants
   | 'TheTinkerer'       // Nicotine
   | 'TheArchitecture'   // Nootropics/Supplements
   | 'MotherOfSilence'   // Benzos
+  | 'HollowChalice'     // Alcohol
   | 'PatternWeaver';    // Pattern analysis
 
 /**
  * Where the voice should surface
  */
 export type Surface = 
-  | 'toast'           // Bottom banner
-  | 'transmission'    // Saved conversation entry
-  | 'daily_whisper'   // End-of-day synthesis
+  | 'toast'           // Bottom banner (fast, small, immediate)
+  | 'transmission'    // Saved conversation entry (reflective, persistent, rare)
+  | 'daily_synthesis' // End-of-day aggregate (highest value per token)
   | 'none';           // Gated/blocked
 
 /**
- * Priority level
+ * Priority tiers
  */
-export type Priority = 'low' | 'med' | 'high';
+export type Priority = 1 | 2 | 3 | 4;
 
 /**
  * Decision from the arbiter
@@ -68,7 +71,8 @@ export interface ArbiterDecision {
 export interface EventContext {
   event: FieldEvent;
   voice?: VoiceName;        // Suggested voice (can be overridden)
-  manual?: boolean;         // User explicitly requested (bypasses some gates)
+  manual?: boolean;         // User explicitly requested (Tier 1 priority)
+  threshold?: boolean;      // Threshold-crossing event (Tier 2 priority)
   metadata?: Record<string, any>;
 }
 
@@ -80,15 +84,23 @@ export interface EventContext {
  * Minimal rolling state for timing decisions
  */
 interface FieldState {
-  last_speak_at: number;                    // Global last speak timestamp
+  last_speak_at: number;                          // Global last speak timestamp
+  last_surface: Surface | null;                   // What surface was used last
   last_speak_at_by_voice: Record<VoiceName, number>;
-  today_counts_by_event: Record<FieldEvent, number>;
-  last_day_phase: string;
-  heat: number;                             // 0-1 intensity score
+  today_public_count_by_surface: {
+    toast: number;
+    transmission: number;
+    daily_synthesis: number;
+  };
+  today_public_count_by_voice: Record<VoiceName, number>;
+  recent_public_voices: VoiceName[];              // Last 2 voices (spam prevention)
+  recent_message_hashes: string[];                // Last 10 message hashes (de-dup)
+  heat: number;                                   // 0-1 intensity score
 }
 
 let fieldState: FieldState = {
   last_speak_at: 0,
+  last_surface: null,
   last_speak_at_by_voice: {
     Witness: 0,
     GreenGodmother: 0,
@@ -96,51 +108,109 @@ let fieldState: FieldState = {
     TheTinkerer: 0,
     TheArchitecture: 0,
     MotherOfSilence: 0,
+    HollowChalice: 0,
     PatternWeaver: 0,
   },
-  today_counts_by_event: {
-    MOMENT_CREATED: 0,
-    ALIGN_COMPLETED: 0,
-    SUBSTANCE_LOGGED: 0,
-    PATTERN_RECORDED: 0,
-    DAY_PHASE_CHANGED: 0,
-    TRANSMISSION_REQUESTED: 0,
-    ANCHOR_COMPLETED: 0,
-    MOVEMENT_LOGGED: 0,
-    NOURISHMENT_LOGGED: 0,
+  today_public_count_by_surface: {
+    toast: 0,
+    transmission: 0,
+    daily_synthesis: 0,
   },
-  last_day_phase: 'morning',
+  today_public_count_by_voice: {
+    Witness: 0,
+    GreenGodmother: 0,
+    Firestarter: 0,
+    TheTinkerer: 0,
+    TheArchitecture: 0,
+    MotherOfSilence: 0,
+    HollowChalice: 0,
+    PatternWeaver: 0,
+  },
+  recent_public_voices: [],
+  recent_message_hashes: [],
   heat: 0,
 };
 
 // ============================================================================
-// CONFIGURATION
+// VOICE POLICIES
+// ============================================================================
+
+interface VoicePolicy {
+  cooldown: number;           // Seconds between speaks
+  maxPerDay: number;          // Max public messages per day
+  allowedChannels: Surface[]; // Where this voice can appear
+}
+
+const VOICE_POLICIES: Record<VoiceName, VoicePolicy> = {
+  Witness: {
+    cooldown: 21600,  // 6 hours
+    maxPerDay: 2,
+    allowedChannels: ['transmission', 'daily_synthesis'],
+  },
+  GreenGodmother: {
+    cooldown: 10800,  // 3 hours
+    maxPerDay: 3,
+    allowedChannels: ['toast', 'transmission', 'daily_synthesis'],
+  },
+  Firestarter: {
+    cooldown: 10800,  // 3 hours
+    maxPerDay: 3,
+    allowedChannels: ['toast', 'transmission', 'daily_synthesis'],
+  },
+  TheTinkerer: {
+    cooldown: 14400,  // 4 hours
+    maxPerDay: 2,
+    allowedChannels: ['transmission', 'daily_synthesis'],
+  },
+  TheArchitecture: {
+    cooldown: 14400,  // 4 hours
+    maxPerDay: 2,
+    allowedChannels: ['transmission', 'daily_synthesis'],
+  },
+  MotherOfSilence: {
+    cooldown: 14400,  // 4 hours
+    maxPerDay: 2,
+    allowedChannels: ['transmission', 'daily_synthesis'],
+  },
+  HollowChalice: {
+    cooldown: 1209600,  // 14 days
+    maxPerDay: 1,       // Actually 1 per month
+    allowedChannels: ['daily_synthesis'],
+  },
+  PatternWeaver: {
+    cooldown: 21600,  // 6 hours
+    maxPerDay: 2,
+    allowedChannels: ['transmission', 'daily_synthesis'],
+  },
+};
+
+// ============================================================================
+// GLOBAL POLICIES
 // ============================================================================
 
 /**
- * Timing constraints (in seconds)
+ * Surface-specific global cooldowns (in seconds)
  */
-const TIMING = {
-  MIN_GLOBAL_INTERVAL: 30,        // No voice speaks within 30s of any other
-  MIN_VOICE_INTERVAL: 3600,       // Same voice waits 1 hour
-  MIN_TOAST_INTERVAL: 20,         // Toasts wait 20s between
-  MIN_TRANSMISSION_INTERVAL: 1800, // Transmissions wait 30min
+const SURFACE_COOLDOWNS = {
+  toast: 45,              // 45s after any toast
+  transmission: 180,      // 3min after any transmission
+  daily_synthesis: 600,   // 10min after any synthesis
 };
 
 /**
- * Event limits per day
+ * Daily caps per surface
  */
-const DAILY_LIMITS: Partial<Record<FieldEvent, number>> = {
-  SUBSTANCE_LOGGED: 10,    // Max 10 substance transmissions per day
-  ALIGN_COMPLETED: 20,     // Max 20 align toasts per day
-  PATTERN_RECORDED: 5,     // Max 5 pattern whispers per day
+const SURFACE_DAILY_CAPS = {
+  toast: 10,
+  transmission: 6,
+  daily_synthesis: 1,
 };
 
 // ============================================================================
 // PERSISTENCE
 // ============================================================================
 
-const STATE_KEY = '@field_arbiter_state';
+const STATE_KEY = '@field_arbiter_state_v2';
 
 /**
  * Load state from storage
@@ -158,22 +228,11 @@ export async function loadFieldState(): Promise<void> {
         fieldState = parsed;
       } else {
         // New day - reset counts
-        fieldState.today_counts_by_event = {
-          MOMENT_CREATED: 0,
-          ALIGN_COMPLETED: 0,
-          SUBSTANCE_LOGGED: 0,
-          PATTERN_RECORDED: 0,
-          DAY_PHASE_CHANGED: 0,
-          TRANSMISSION_REQUESTED: 0,
-          ANCHOR_COMPLETED: 0,
-          MOVEMENT_LOGGED: 0,
-          NOURISHMENT_LOGGED: 0,
-        };
-        await saveFieldState();
+        resetDailyCounts();
       }
     }
   } catch (error) {
-    console.log('Field arbiter: Could not load state', error);
+    console.log('[ARB] Could not load state:', error);
   }
 }
 
@@ -184,64 +243,39 @@ async function saveFieldState(): Promise<void> {
   try {
     await AsyncStorage.setItem(STATE_KEY, JSON.stringify(fieldState));
   } catch (error) {
-    console.log('Field arbiter: Could not save state', error);
+    console.log('[ARB] Could not save state:', error);
   }
 }
 
 // ============================================================================
-// GATING RULES
+// PRIORITY TIERS
 // ============================================================================
 
 /**
- * Check if event has exceeded daily limit
+ * Determine priority tier for event
+ * Tier 1 (highest): user explicitly requests
+ * Tier 2: threshold-crossing events
+ * Tier 3: ordinary logs
+ * Tier 4 (lowest): passive time-based (disabled in v0)
  */
-function checkDailyLimit(event: FieldEvent): boolean {
-  const limit = DAILY_LIMITS[event];
-  if (!limit) return true; // No limit set
+function getPriorityTier(context: EventContext): Priority {
+  if (context.manual) return 1;
+  if (context.threshold) return 2;
   
-  const count = fieldState.today_counts_by_event[event] || 0;
-  return count < limit;
-}
-
-/**
- * Check if enough time has passed globally
- */
-function checkGlobalTiming(): boolean {
-  const now = Date.now();
-  const elapsed = (now - fieldState.last_speak_at) / 1000;
-  return elapsed >= TIMING.MIN_GLOBAL_INTERVAL;
-}
-
-/**
- * Check if enough time has passed for specific voice
- */
-function checkVoiceTiming(voice: VoiceName): boolean {
-  const now = Date.now();
-  const lastSpeak = fieldState.last_speak_at_by_voice[voice] || 0;
-  const elapsed = (now - lastSpeak) / 1000;
-  return elapsed >= TIMING.MIN_VOICE_INTERVAL;
-}
-
-/**
- * Check if toast is allowed (stricter timing)
- */
-function checkToastTiming(): boolean {
-  const now = Date.now();
-  const elapsed = (now - fieldState.last_speak_at) / 1000;
-  return elapsed >= TIMING.MIN_TOAST_INTERVAL;
-}
-
-/**
- * Check if transmission is allowed
- */
-function checkTransmissionTiming(): boolean {
-  const now = Date.now();
-  const elapsed = (now - fieldState.last_speak_at) / 1000;
-  return elapsed >= TIMING.MIN_TRANSMISSION_INTERVAL;
+  // Tier 3 for ordinary events
+  switch (context.event) {
+    case 'SUBSTANCE_LOGGED':
+    case 'PATTERN_RECORDED':
+    case 'ALIGN_COMPLETED':
+    case 'ANCHOR_COMPLETED':
+      return 3;
+    default:
+      return 4;
+  }
 }
 
 // ============================================================================
-// ROUTING LOGIC
+// VOICE SELECTION
 // ============================================================================
 
 /**
@@ -259,21 +293,26 @@ function selectVoice(context: EventContext): VoiceName | null {
       if (substance.includes('cannabis') || substance.includes('weed') || substance.includes('thc')) {
         return 'GreenGodmother';
       }
-      if (substance.includes('caffeine') || substance.includes('adderall') || substance.includes('stimulant')) {
+      if (substance.includes('caffeine') || substance.includes('adderall') || substance.includes('stimulant') || substance.includes('vyvanse')) {
         return 'Firestarter';
       }
-      if (substance.includes('nicotine') || substance.includes('vape') || substance.includes('cigarette')) {
+      if (substance.includes('nicotine') || substance.includes('vape') || substance.includes('cigarette') || substance.includes('tobacco')) {
         return 'TheTinkerer';
       }
-      if (substance.includes('supplement') || substance.includes('nootropic') || substance.includes('vitamin')) {
+      if (substance.includes('supplement') || substance.includes('nootropic') || substance.includes('vitamin') || substance.includes('l-theanine')) {
         return 'TheArchitecture';
       }
-      if (substance.includes('benzo') || substance.includes('xanax') || substance.includes('klonopin')) {
+      if (substance.includes('benzo') || substance.includes('xanax') || substance.includes('klonopin') || substance.includes('clonazepam')) {
         return 'MotherOfSilence';
+      }
+      if (substance.includes('alcohol') || substance.includes('beer') || substance.includes('wine') || substance.includes('liquor')) {
+        return 'HollowChalice';
       }
       return null; // Unknown substance
       
     case 'PATTERN_RECORDED':
+      return 'PatternWeaver';
+      
     case 'DAY_PHASE_CHANGED':
       return 'Witness';
       
@@ -285,34 +324,158 @@ function selectVoice(context: EventContext): VoiceName | null {
   }
 }
 
+// ============================================================================
+// SURFACE SELECTION
+// ============================================================================
+
 /**
- * Determine surface based on event and timing
+ * Determine surface based on event, priority, and voice policy
  */
-function selectSurface(event: FieldEvent, manual: boolean): Surface {
-  // Manual requests go to transmission
-  if (manual) return 'transmission';
+function selectSurface(event: FieldEvent, voice: VoiceName, priority: Priority): Surface {
+  const policy = VOICE_POLICIES[voice];
   
-  // Event-based routing
-  switch (event) {
-    case 'ALIGN_COMPLETED':
-    case 'ANCHOR_COMPLETED':
-      return 'toast';
-      
-    case 'SUBSTANCE_LOGGED':
-      return 'transmission';
-      
-    case 'PATTERN_RECORDED':
-      return 'daily_whisper';
-      
-    case 'DAY_PHASE_CHANGED':
-      return 'daily_whisper';
-      
-    case 'TRANSMISSION_REQUESTED':
-      return 'transmission';
-      
-    default:
-      return 'none';
+  // Tier 1 (manual) goes to transmission
+  if (priority === 1) {
+    return policy.allowedChannels.includes('transmission') ? 'transmission' : 'none';
   }
+  
+  // Tier 2 (threshold) can use toast or transmission
+  if (priority === 2) {
+    if (policy.allowedChannels.includes('toast')) return 'toast';
+    if (policy.allowedChannels.includes('transmission')) return 'transmission';
+    return 'none';
+  }
+  
+  // Tier 3 (ordinary) - usually journal-only, but can surface if quiet
+  // For now, route to transmission if allowed
+  if (priority === 3) {
+    switch (event) {
+      case 'SUBSTANCE_LOGGED':
+        return policy.allowedChannels.includes('transmission') ? 'transmission' : 'none';
+      case 'PATTERN_RECORDED':
+        return 'daily_synthesis';
+      case 'ALIGN_COMPLETED':
+      case 'ANCHOR_COMPLETED':
+        return policy.allowedChannels.includes('toast') ? 'toast' : 'none';
+      default:
+        return 'none';
+    }
+  }
+  
+  // Tier 4 (passive) - disabled in v0
+  return 'none';
+}
+
+// ============================================================================
+// GATING RULES
+// ============================================================================
+
+/**
+ * Check if surface has exceeded daily cap
+ */
+function checkSurfaceDailyCap(surface: Surface): { allowed: boolean; reason?: string } {
+  if (surface === 'none') return { allowed: true };
+  
+  const cap = SURFACE_DAILY_CAPS[surface];
+  const count = fieldState.today_public_count_by_surface[surface] || 0;
+  
+  if (count >= cap) {
+    return {
+      allowed: false,
+      reason: `${surface} daily cap reached (${count}/${cap})`,
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * Check if voice has exceeded daily cap
+ */
+function checkVoiceDailyCap(voice: VoiceName): { allowed: boolean; reason?: string } {
+  const policy = VOICE_POLICIES[voice];
+  const count = fieldState.today_public_count_by_voice[voice] || 0;
+  
+  if (count >= policy.maxPerDay) {
+    return {
+      allowed: false,
+      reason: `${voice} daily cap reached (${count}/${policy.maxPerDay})`,
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * Check if enough time has passed globally (surface-specific)
+ */
+function checkGlobalCooldown(surface: Surface): { allowed: boolean; reason?: string } {
+  if (!fieldState.last_surface) return { allowed: true };
+  
+  const now = Date.now();
+  const elapsed = (now - fieldState.last_speak_at) / 1000;
+  const requiredCooldown = SURFACE_COOLDOWNS[fieldState.last_surface];
+  
+  if (elapsed < requiredCooldown) {
+    const remaining = Math.ceil(requiredCooldown - elapsed);
+    return {
+      allowed: false,
+      reason: `global cooldown (${fieldState.last_surface}: ${remaining}s left)`,
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * Check if enough time has passed for specific voice
+ */
+function checkVoiceCooldown(voice: VoiceName): { allowed: boolean; reason?: string } {
+  const policy = VOICE_POLICIES[voice];
+  const now = Date.now();
+  const lastSpeak = fieldState.last_speak_at_by_voice[voice] || 0;
+  const elapsed = (now - lastSpeak) / 1000;
+  
+  if (elapsed < policy.cooldown) {
+    const remaining = Math.ceil(policy.cooldown - elapsed);
+    return {
+      allowed: false,
+      reason: `${voice} cooldown (${remaining}s left)`,
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * Check if voice is in recent public messages (spam prevention)
+ */
+function checkVoiceDominance(voice: VoiceName): { allowed: boolean; reason?: string } {
+  if (fieldState.recent_public_voices.includes(voice)) {
+    return {
+      allowed: false,
+      reason: `${voice} in last 2 messages (dominance prevention)`,
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * Check if voice is allowed on this surface
+ */
+function checkVoiceChannel(voice: VoiceName, surface: Surface): { allowed: boolean; reason?: string } {
+  if (surface === 'none') return { allowed: false, reason: 'no surface selected' };
+  
+  const policy = VOICE_POLICIES[voice];
+  if (!policy.allowedChannels.includes(surface)) {
+    return {
+      allowed: false,
+      reason: `${voice} not allowed on ${surface}`,
+    };
+  }
+  
+  return { allowed: true };
 }
 
 // ============================================================================
@@ -325,108 +488,151 @@ function selectSurface(event: FieldEvent, manual: boolean): Surface {
 export async function processEvent(context: EventContext): Promise<ArbiterDecision> {
   const { event, manual = false } = context;
   
+  // Determine priority tier
+  const priority = getPriorityTier(context);
+  
   // Select voice and surface
   const voice = selectVoice(context);
-  const surface = selectSurface(event, manual);
-  
-  // If no voice or surface, block
-  if (!voice || surface === 'none') {
+  if (!voice) {
     return {
       surface: 'none',
       voice: null,
-      priority: 'low',
-      reason: 'No voice or surface selected',
+      priority,
+      reason: 'no voice selected for event',
       allowed: false,
     };
   }
   
-  // Manual requests bypass most gates
-  if (manual) {
-    // Still check global timing to prevent double-fire
-    if (!checkGlobalTiming()) {
+  const surface = selectSurface(event, voice, priority);
+  if (surface === 'none') {
+    return {
+      surface: 'none',
+      voice,
+      priority,
+      reason: 'no surface selected',
+      allowed: false,
+    };
+  }
+  
+  // Tier 1 (manual) bypasses most gates
+  if (priority === 1) {
+    // Still check voice daily cap
+    const voiceCapCheck = checkVoiceDailyCap(voice);
+    if (!voiceCapCheck.allowed) {
       return {
         surface: 'none',
         voice,
-        priority: 'high',
-        reason: 'Manual request blocked: too soon after last speak',
+        priority,
+        reason: `MANUAL BLOCKED: ${voiceCapCheck.reason}`,
         allowed: false,
       };
     }
     
-    // Update state
-    updateState(event, voice);
+    // Still check global cooldown to prevent double-fire
+    const globalCheck = checkGlobalCooldown(surface);
+    if (!globalCheck.allowed) {
+      return {
+        surface: 'none',
+        voice,
+        priority,
+        reason: `MANUAL BLOCKED: ${globalCheck.reason}`,
+        allowed: false,
+      };
+    }
     
+    // Approved
+    updateState(voice, surface);
     return {
       surface,
       voice,
-      priority: 'high',
-      reason: 'Manual request approved',
+      priority,
+      reason: 'MANUAL REQUEST approved',
       allowed: true,
     };
   }
   
-  // Check daily limit
-  if (!checkDailyLimit(event)) {
+  // All other tiers: check all gates
+  
+  // 1. Surface daily cap
+  const surfaceCapCheck = checkSurfaceDailyCap(surface);
+  if (!surfaceCapCheck.allowed) {
     return {
       surface: 'none',
       voice,
-      priority: 'low',
-      reason: `Daily limit exceeded for ${event}`,
+      priority,
+      reason: surfaceCapCheck.reason!,
       allowed: false,
     };
   }
   
-  // Check timing based on surface
-  if (surface === 'toast' && !checkToastTiming()) {
+  // 2. Voice daily cap
+  const voiceCapCheck = checkVoiceDailyCap(voice);
+  if (!voiceCapCheck.allowed) {
     return {
       surface: 'none',
       voice,
-      priority: 'low',
-      reason: 'Toast blocked: too soon after last toast',
+      priority,
+      reason: voiceCapCheck.reason!,
       allowed: false,
     };
   }
   
-  if (surface === 'transmission' && !checkTransmissionTiming()) {
+  // 3. Global cooldown
+  const globalCheck = checkGlobalCooldown(surface);
+  if (!globalCheck.allowed) {
     return {
       surface: 'none',
       voice,
-      priority: 'med',
-      reason: 'Transmission blocked: too soon after last transmission',
+      priority,
+      reason: globalCheck.reason!,
       allowed: false,
     };
   }
   
-  // Check voice-specific timing
-  if (!checkVoiceTiming(voice)) {
+  // 4. Voice cooldown
+  const voiceCooldownCheck = checkVoiceCooldown(voice);
+  if (!voiceCooldownCheck.allowed) {
     return {
       surface: 'none',
       voice,
-      priority: 'low',
-      reason: `Voice ${voice} blocked: spoke too recently`,
+      priority,
+      reason: voiceCooldownCheck.reason!,
       allowed: false,
     };
   }
   
-  // Check global timing
-  if (!checkGlobalTiming()) {
+  // 5. Voice dominance (spam prevention)
+  const dominanceCheck = checkVoiceDominance(voice);
+  if (!dominanceCheck.allowed) {
     return {
       surface: 'none',
       voice,
-      priority: 'low',
-      reason: 'Global timing: too soon after any voice',
+      priority,
+      reason: dominanceCheck.reason!,
+      allowed: false,
+    };
+  }
+  
+  // 6. Voice channel policy
+  const channelCheck = checkVoiceChannel(voice, surface);
+  if (!channelCheck.allowed) {
+    return {
+      surface: 'none',
+      voice,
+      priority,
+      reason: channelCheck.reason!,
       allowed: false,
     };
   }
   
   // All gates passed - allow
-  updateState(event, voice);
+  updateState(voice, surface);
   
   return {
     surface,
     voice,
-    priority: 'med',
-    reason: 'All gates passed',
+    priority,
+    reason: `tier ${priority} approved`,
     allowed: true,
   };
 }
@@ -434,12 +640,21 @@ export async function processEvent(context: EventContext): Promise<ArbiterDecisi
 /**
  * Update state after successful speak
  */
-function updateState(event: FieldEvent, voice: VoiceName): void {
+function updateState(voice: VoiceName, surface: Surface): void {
   const now = Date.now();
   
   fieldState.last_speak_at = now;
+  fieldState.last_surface = surface;
   fieldState.last_speak_at_by_voice[voice] = now;
-  fieldState.today_counts_by_event[event] = (fieldState.today_counts_by_event[event] || 0) + 1;
+  
+  // Increment counts
+  if (surface !== 'none') {
+    fieldState.today_public_count_by_surface[surface]++;
+  }
+  fieldState.today_public_count_by_voice[voice]++;
+  
+  // Update recent voices (keep last 2)
+  fieldState.recent_public_voices = [voice, ...fieldState.recent_public_voices].slice(0, 2);
   
   // Update heat (simple increment, decays over time)
   fieldState.heat = Math.min(1, fieldState.heat + 0.1);
@@ -451,17 +666,23 @@ function updateState(event: FieldEvent, voice: VoiceName): void {
  * Reset daily counts (call at midnight or day phase change)
  */
 export function resetDailyCounts(): void {
-  fieldState.today_counts_by_event = {
-    MOMENT_CREATED: 0,
-    ALIGN_COMPLETED: 0,
-    SUBSTANCE_LOGGED: 0,
-    PATTERN_RECORDED: 0,
-    DAY_PHASE_CHANGED: 0,
-    TRANSMISSION_REQUESTED: 0,
-    ANCHOR_COMPLETED: 0,
-    MOVEMENT_LOGGED: 0,
-    NOURISHMENT_LOGGED: 0,
+  fieldState.today_public_count_by_surface = {
+    toast: 0,
+    transmission: 0,
+    daily_synthesis: 0,
   };
+  fieldState.today_public_count_by_voice = {
+    Witness: 0,
+    GreenGodmother: 0,
+    Firestarter: 0,
+    TheTinkerer: 0,
+    TheArchitecture: 0,
+    MotherOfSilence: 0,
+    HollowChalice: 0,
+    PatternWeaver: 0,
+  };
+  fieldState.recent_public_voices = [];
+  fieldState.recent_message_hashes = [];
   fieldState.heat = 0;
   saveFieldState();
 }
@@ -478,23 +699,16 @@ export function getFieldState(): FieldState {
 // ============================================================================
 
 /**
- * Log decision for debugging
+ * Log decision in production format
+ * Format: [ARB] event=X voice=Y decision=Z reason=...
  */
 export function logDecision(context: EventContext, decision: ArbiterDecision): void {
   if (__DEV__) {
-    console.log('[Field Arbiter]', {
-      event: context.event,
-      decision: {
-        allowed: decision.allowed,
-        surface: decision.surface,
-        voice: decision.voice,
-        reason: decision.reason,
-      },
-      state: {
-        last_speak_seconds_ago: (Date.now() - fieldState.last_speak_at) / 1000,
-        today_counts: fieldState.today_counts_by_event,
-        heat: fieldState.heat,
-      },
-    });
+    const status = decision.allowed ? 'ALLOW' : 'DEFER';
+    console.log(
+      `[ARB] event=${context.event} voice=${decision.voice || 'none'} ` +
+      `decision=${status} surface=${decision.surface} priority=tier${decision.priority} ` +
+      `reason=${decision.reason}`
+    );
   }
 }
