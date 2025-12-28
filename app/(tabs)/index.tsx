@@ -802,9 +802,10 @@ export default function HomeScreen() {
               const fullContent = `${entry.allyName || 'Substance Moment'}\n\nIntention: ${entry.tone || 'Not specified'}\nSensation: ${entry.frequency || 'Not specified'}\nReflection: ${entry.presence || 'Not specified'}\n\nSynthesis & Invocation:\n${entry.context || 'None'}`;
               return {
                 id: entry.id,
-                preview: entry.allyName || 'Substance Moment',
+                preview: entry.tone || entry.frequency || 'Substance Moment',
                 fullContent,
                 date: new Date(entry.date).toLocaleDateString(),
+                groupKey: entry.allyName || 'Unknown Substance',
               };
             })}
             colors={colors}
@@ -812,6 +813,7 @@ export default function HomeScreen() {
             onEntryPress={(entry) => {
               openEntryModal(entry, 'Substance Reflection');
             }}
+            grouped={true}
           />
 
           {/* Substance Transmissions Section */}
