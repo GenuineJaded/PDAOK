@@ -571,19 +571,21 @@ export default function HomeScreen() {
           onClose={() => setIsCraftMomentModalVisible(false)}
           container={activeContainer}
           onSave={(title, body, container) => {
-            // Create a Moment (journal entry) instead of an Item (anchor)
-            const newMoment: Omit<import('../constants/Types').Moment, 'id' | 'timestamp' | 'date'> = {
-              text: body,
+            // Parse Notice/Act/Reflect from body
+            const lines = body.split('\n\n');
+            const notice = lines[0]?.replace('Notice: ', '') || '';
+            const act = lines[1]?.replace('Act: ', '') || '';
+            const reflect = lines[2]?.replace('Reflect: ', '') || '';
+            
+            // Create an Item (anchor) with category 'crafted'
+            addItem({
+              title: title,
               container: container,
-              tone: '',
-              frequency: '',
-              presence: '',
-              context: '',
-              action_reflection: '',
-              result_shift: '',
-              conclusion_offering: '',
-            };
-            addMoment(newMoment);
+              category: 'crafted',
+              body_cue: notice,
+              micro: act,
+              desire: reflect,
+            });
             // Trigger bloom effect
             setShowBloomEffect(true);
           }}
