@@ -430,11 +430,13 @@ export default function HomeScreen() {
             style={[styles.simpleQuickLogButton, { backgroundColor: colors.accent }]}
             onPress={() => {
               console.log('✨ QUICK LOG BUTTON PRESSED ✨');
+              console.log('Before setState:', isQuickLogModalVisible);
               setIsQuickLogModalVisible(true);
+              console.log('After setState call');
             }}
             activeOpacity={0.8}
           >
-            <Text style={[styles.simpleQuickLogText, { color: colors.card }]}>⚡ Quick Log</Text>
+            <Text style={[styles.simpleQuickLogText, { color: colors.card }]}>⚡ Quick Log {isQuickLogModalVisible ? '(OPEN)' : '(CLOSED)'}</Text>
           </TouchableOpacity>
           
           {renderActionGrid()}
