@@ -60,6 +60,9 @@ import FieldTransmissions from '../_components/FieldTransmissions';
 import { AlchemicalSymbol } from '../_components/AlchemicalSymbol';
 import { QuickLogModal } from '../_modal/QuickLogModal';
 import { QuickSubstanceLogModal } from '../_modal/QuickSubstanceLogModal';
+import { EditFoodModal } from '../_modal/EditFoodModal';
+import { EditMovementModal } from '../_modal/EditMovementModal';
+import { EditSubstanceModal } from '../_modal/EditSubstanceModal';
 
 type Screen = 'home' | 'substances' | 'archetypes' | 'patterns' | 'nourish' | 'transmissions';
 
@@ -188,6 +191,12 @@ export default function HomeScreen() {
   // Quick Log state
   const [isQuickLogModalVisible, setIsQuickLogModalVisible] = useState(false);
   const [isQuickSubstanceModalVisible, setIsQuickSubstanceModalVisible] = useState(false);
+  
+  // Edit modal state
+  const [isEditFoodModalVisible, setIsEditFoodModalVisible] = useState(false);
+  const [isEditMovementModalVisible, setIsEditMovementModalVisible] = useState(false);
+  const [isEditSubstanceModalVisible, setIsEditSubstanceModalVisible] = useState(false);
+  const [entryToEdit, setEntryToEdit] = useState<any>(null);
   
   // ScrollView ref for scrolling to top
   const scrollViewRef = useRef<ScrollView>(null);
@@ -1422,8 +1431,29 @@ export default function HomeScreen() {
               );
             } : undefined}
             onEdit={selectedJournalEntry.type ? () => {
-              // TODO: Open edit modal for the specific type
-              Alert.alert('Edit', 'Edit functionality coming soon!');
+              // Find the full entry object based on type and ID
+              if (selectedJournalEntry.type === 'substance') {
+                const entry = substanceJournalEntries.find(e => e.id === selectedJournalEntry.id);
+                if (entry) {
+                  setEntryToEdit(entry);
+                  setIsEditSubstanceModalVisible(true);
+                  setIsJournalEntryModalVisible(false);
+                }
+              } else if (selectedJournalEntry.type === 'food') {
+                const entry = foodEntries.find(e => e.id === selectedJournalEntry.id);
+                if (entry) {
+                  setEntryToEdit(entry);
+                  setIsEditFoodModalVisible(true);
+                  setIsJournalEntryModalVisible(false);
+                }
+              } else if (selectedJournalEntry.type === 'movement') {
+                const entry = movementEntries.find(e => e.id === selectedJournalEntry.id);
+                if (entry) {
+                  setEntryToEdit(entry);
+                  setIsEditMovementModalVisible(true);
+                  setIsJournalEntryModalVisible(false);
+                }
+              }
             } : undefined}
           />
         ) : null}
@@ -1458,6 +1488,61 @@ export default function HomeScreen() {
             setIsQuickSubstanceModalVisible(false);
           }}
           container={activeContainer}
+        />
+
+        {/* Edit Modals */}
+        <EditSubstanceModal
+          isVisible={isEditSubstanceModalVisible}
+          onClose={() => {
+            setIsEditSubstanceModalVisible(false);
+            setEntryToEdit(null);
+          }}
+          onSave={(updates) => {
+            if (entryToEdit) {
+              updateSubstanceJournalEntry(entryToEdit.id, updates);
+              setIsEditSubstanceModalVisible(false);
+              setEntryToEdit(null);
+              setSelectedJournalEntry(null);
+            }
+          }}
+          entry={entryToEdit}
+          colors={colors}
+        />
+
+        <EditFoodModal
+          isVisible={isEditFoodModalVisible}
+          onClose={() => {
+            setIsEditFoodModalVisible(false);
+            setEntryToEdit(null);
+          }}
+          onSave={(updates) => {
+            if (entryToEdit) {
+              updateFoodEntry(entryToEdit.id, updates);
+              setIsEditFoodModalVisible(false);
+              setEntryToEdit(null);
+              setSelectedJournalEntry(null);
+            }
+          }}
+          entry={entryToEdit}
+          colors={colors}
+        />
+
+        <EditMovementModal
+          isVisible={isEditMovementModalVisible}
+          onClose={() => {
+            setIsEditMovementModalVisible(false);
+            setEntryToEdit(null);
+          }}
+          onSave={(updates) => {
+            if (entryToEdit) {
+              updateMovementEntry(entryToEdit.id, updates);
+              setIsEditMovementModalVisible(false);
+              setEntryToEdit(null);
+              setSelectedJournalEntry(null);
+            }
+          }}
+          entry={entryToEdit}
+          colors={colors}
         />
       </View>
     );
