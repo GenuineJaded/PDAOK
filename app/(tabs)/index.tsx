@@ -82,6 +82,7 @@ export default function HomeScreen() {
     substanceJournalEntries,
     removeJournalEntry,
     removeSubstanceJournalEntry,
+    updateSubstanceJournalEntry,
     addMoment,
     addSubstanceMoment,
     addAlly,
@@ -98,9 +99,11 @@ export default function HomeScreen() {
     foodEntries,
     addFoodEntry,
     removeFoodEntry,
+    updateFoodEntry,
     movementEntries,
     addMovementEntry,
     removeMovementEntry,
+    updateMovementEntry,
     dreamseeds,
     addDreamseed,
     archetypes,
@@ -269,11 +272,13 @@ export default function HomeScreen() {
   };
 
   // Helper functions for shared modal (used by sub-screens, not home)
-  const openEntryModal = (entry: any, title: string) => {
+  const openEntryModal = (entry: any, title: string, entryType?: 'substance' | 'food' | 'movement') => {
     setSelectedJournalEntry({
+      id: entry.id,
       title,
       date: entry.date,
       content: entry.fullContent,
+      type: entryType,
     });
     setIsJournalEntryModalVisible(true);
   };
@@ -827,7 +832,7 @@ export default function HomeScreen() {
             colors={colors}
             emptyMessage="No personal substance logs yet. Log your first interaction to begin."
             onEntryPress={(entry) => {
-              openEntryModal(entry, 'Substance Reflection');
+              openEntryModal(entry, 'Substance Reflection', 'substance');
             }}
             grouped={true}
           />
@@ -1261,7 +1266,7 @@ export default function HomeScreen() {
             colors={colors}
             emptyMessage="No meals logged yet. Tap below to record your first nourishment."
             onEntryPress={(entry) => {
-              openEntryModal(entry, 'Nourishment Entry');
+              openEntryModal(entry, 'Nourishment Entry', 'food');
             }}
           />
 
@@ -1334,7 +1339,7 @@ export default function HomeScreen() {
               colors={colors}
               emptyMessage="The field awaits your first movement. How does your body feel?"
               onEntryPress={(entry) => {
-                openEntryModal(entry, 'Movement Entry');
+                openEntryModal(entry, 'Movement Entry', 'movement');
               }}
             />
 
@@ -1391,6 +1396,35 @@ export default function HomeScreen() {
             date={selectedJournalEntry.date}
             content={selectedJournalEntry.content}
             colors={colors}
+            entryId={selectedJournalEntry.id}
+            onDelete={selectedJournalEntry.type ? () => {
+              Alert.alert(
+                'Delete Entry',
+                'Are you sure you want to delete this entry?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                      if (selectedJournalEntry.type === 'substance') {
+                        removeSubstanceJournalEntry(selectedJournalEntry.id);
+                      } else if (selectedJournalEntry.type === 'food') {
+                        removeFoodEntry(selectedJournalEntry.id);
+                      } else if (selectedJournalEntry.type === 'movement') {
+                        removeMovementEntry(selectedJournalEntry.id);
+                      }
+                      setIsJournalEntryModalVisible(false);
+                      setSelectedJournalEntry(null);
+                    },
+                  },
+                ]
+              );
+            } : undefined}
+            onEdit={selectedJournalEntry.type ? () => {
+              // TODO: Open edit modal for the specific type
+              Alert.alert('Edit', 'Edit functionality coming soon!');
+            } : undefined}
           />
         ) : null}
 

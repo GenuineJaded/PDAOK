@@ -26,8 +26,10 @@ interface AppContextType extends AppState {
   addFieldWhisper: (whisper: Omit<import('../constants/Types').FieldWhisper, 'id' | 'timestamp' | 'date'>) => void;
   addFoodEntry: (entry: Omit<FoodEntry, 'id' | 'timestamp' | 'date'>) => void;
   removeFoodEntry: (id: string) => void;
+  updateFoodEntry: (id: string, entry: Partial<FoodEntry>) => void;
   addMovementEntry: (entry: Omit<MovementEntry, 'id' | 'timestamp' | 'date'>) => void;
   removeMovementEntry: (id: string) => void;
+  updateMovementEntry: (id: string, entry: Partial<MovementEntry>) => void;
   addDreamseed: (word: string) => void;
   addArchetype: (archetype: Omit<import('../constants/Types').Archetype, 'id'>) => void;
   updateArchetype: (archetype: import('../constants/Types').Archetype) => void;
@@ -40,6 +42,7 @@ interface AppContextType extends AppState {
   loading: boolean;
   removeJournalEntry: (id: string) => void;
   removeSubstanceJournalEntry: (id: string) => void;
+  updateSubstanceJournalEntry: (id: string, entry: Partial<Moment>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -56,6 +59,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const removeSubstanceJournalEntry = useCallback((id: string) => {
     setSubstanceJournalEntries(prev => prev.filter(entry => entry.id !== id));
+  }, []);
+  
+  const updateSubstanceJournalEntry = useCallback((id: string, updates: Partial<Moment>) => {
+    setSubstanceJournalEntries(prev => prev.map(entry => entry.id === id ? { ...entry, ...updates } : entry));
   }, []);
   const [completions, setCompletions] = useState<Completion[]>([]);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
@@ -397,6 +404,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setFoodEntries(prev => prev.filter(e => e.id !== id));
   }, []);
 
+  const updateFoodEntry = useCallback((id: string, updates: Partial<FoodEntry>) => {
+    setFoodEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+  }, []);
+
   const addMovementEntry = useCallback((entry: Omit<MovementEntry, 'id' | 'timestamp' | 'date'>) => {
     const now = new Date();
     const newEntry: MovementEntry = {
@@ -410,6 +421,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const removeMovementEntry = useCallback((id: string) => {
     setMovementEntries(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  const updateMovementEntry = useCallback((id: string, updates: Partial<MovementEntry>) => {
+    setMovementEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
   }, []);
 
   const addArchetype = useCallback((archetype: Omit<Archetype, 'id'>) => {
@@ -437,6 +452,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value: AppContextType = {
     removeJournalEntry,
     removeSubstanceJournalEntry,
+    updateSubstanceJournalEntry,
     items,
     allies,
     journalEntries,
@@ -469,8 +485,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addFieldWhisper,
     addFoodEntry,
     removeFoodEntry,
+    updateFoodEntry,
     addMovementEntry,
     removeMovementEntry,
+    updateMovementEntry,
     addDreamseed,
     addArchetype,
     updateArchetype,

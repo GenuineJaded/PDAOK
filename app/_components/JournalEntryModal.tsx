@@ -19,6 +19,9 @@ interface JournalEntryModalProps {
   date?: string;
   content: string;
   colors: ColorScheme;
+  onDelete?: () => void;
+  onEdit?: () => void;
+  entryId?: string;
 }
 
 /**
@@ -32,6 +35,9 @@ export const JournalEntryModal: React.FC<JournalEntryModalProps> = ({
   date,
   content,
   colors,
+  onDelete,
+  onEdit,
+  entryId,
 }) => {
   return (
     <Modal
@@ -60,6 +66,28 @@ export const JournalEntryModal: React.FC<JournalEntryModalProps> = ({
           >
             <Text style={[styles.content, { color: colors.text }]}>{content}</Text>
           </ScrollView>
+
+          {/* Action Buttons */}
+          {(onDelete || onEdit) && (
+            <View style={[styles.actionButtons, { backgroundColor: colors.card + 'B3' }]}>
+              {onEdit && (
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: colors.bg }]}
+                  onPress={onEdit}
+                >
+                  <Text style={[styles.actionButtonText, { color: colors.text }]}>✏️ Edit</Text>
+                </TouchableOpacity>
+              )}
+              {onDelete && (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.deleteButton, { backgroundColor: '#ff4444' }]}
+                  onPress={onDelete}
+                >
+                  <Text style={[styles.actionButtonText, { color: '#ffffff' }]}>🗑️ Delete</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -119,5 +147,24 @@ const styles = StyleSheet.create({
   content: {
     fontSize: 15,
     lineHeight: 24,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+    paddingTop: 16,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  deleteButton: {
+    // backgroundColor set inline
+  },
+  actionButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
