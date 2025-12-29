@@ -836,6 +836,7 @@ export default function HomeScreen() {
                 preview: entry.tone || entry.frequency || 'Substance Moment',
                 fullContent,
                 date: new Date(entry.date).toLocaleDateString(),
+                timestamp: entry.timestamp,
                 groupKey: entry.allyName || 'Unknown Substance',
               };
             })}

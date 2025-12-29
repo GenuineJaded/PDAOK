@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ColorScheme } from '../_constants/Types';
+import { formatGroupDate } from '../_utils/journalStats';
 
 interface JournalEntry {
   id: string;
   preview: string;
   fullContent: string;
   date?: string;
+  timestamp?: number; // For sorting and date grouping
   groupKey?: string; // For grouping entries (e.g., substance name)
 }
 
@@ -115,34 +117,81 @@ export const JournalList: React.FC<JournalListProps> = ({
                       </Text>
                     </TouchableOpacity>
 
-                    {/* Level 3: Individual Entries */}
-                    {isGroupExpanded && groupEntries.map((entry) => (
-                      <TouchableOpacity
-                        key={entry.id}
-                        style={[styles.entryRow, styles.nestedEntry, { borderBottomColor: colors.dim + '33' }]}
-                        onPress={() => {
-                          console.log('JournalList: Entry tapped', entry.id);
-                          onEntryPress?.(entry);
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.entryContent} pointerEvents="none">
-                          {entry.date && (
-                            <Text style={[styles.entryDate, { color: colors.dim }]}>
-                              {entry.date}
-                            </Text>
-                          )}
-                          <Text
-                            style={[styles.entryPreview, { color: colors.text }]}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                          >
-                            {entry.preview}
-                          </Text>
-                        </View>
-                        <Text style={[styles.arrow, { color: colors.dim }]} pointerEvents="none">›</Text>
-                      </TouchableOpacity>
-                    ))}
+                    {/* Level 3: Date Groups within Substance */}
+                    {isGroupExpanded && (() => {
+                      // Group entries by date within this substance
+                      const entriesByDate: Record<string, JournalEntry[]> = {};
+                      
+                      groupEntries.forEach(entry => {
+                        if (entry.timestamp) {
+                          const { display, raw } = formatGroupDate(new Date(entry.timestamp));
+                          if (!entriesByDate[raw]) {
+                            entriesByDate[raw] = [];
+                          }
+                          entriesByDate[raw].push(entry);
+                        } else {
+                          // Fallback for entries without timestamp
+                          const fallbackKey = 'unknown';
+                          if (!entriesByDate[fallbackKey]) {
+                            entriesByDate[fallbackKey] = [];
+                          }
+                          entriesByDate[fallbackKey].push(entry);
+                        }
+                      });
+
+                      // Sort dates (newest first)
+                      const sortedDates = Object.keys(entriesByDate).sort((a, b) => b.localeCompare(a));
+
+                      return sortedDates.map(dateKey => {
+                        const dateEntries = entriesByDate[dateKey];
+                        const { display } = dateKey !== 'unknown' 
+                          ? formatGroupDate(new Date(dateEntries[0].timestamp!))
+                          : { display: 'Unknown Date' };
+
+                        return (
+                          <View key={dateKey}>
+                            {/* Date Header with Count */}
+                            <View style={[styles.dateHeader, { backgroundColor: colors.bg + '40' }]}>
+                              <Text style={[styles.dateLabel, { color: colors.dim }]}>
+                                {display}
+                              </Text>
+                              <Text style={[styles.dateCount, { color: colors.dim }]}>
+                                {dateEntries.length} {dateEntries.length === 1 ? 'entry' : 'entries'}
+                              </Text>
+                            </View>
+
+                            {/* Individual Entries for this Date */}
+                            {dateEntries.map((entry) => (
+                              <TouchableOpacity
+                                key={entry.id}
+                                style={[styles.entryRow, styles.nestedEntry, { borderBottomColor: colors.dim + '33' }]}
+                                onPress={() => {
+                                  console.log('JournalList: Entry tapped', entry.id);
+                                  onEntryPress?.(entry);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <View style={styles.entryContent} pointerEvents="none">
+                                  {entry.date && (
+                                    <Text style={[styles.entryDate, { color: colors.dim }]}>
+                                      {entry.date}
+                                    </Text>
+                                  )}
+                                  <Text
+                                    style={[styles.entryPreview, { color: colors.text }]}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                  >
+                                    {entry.preview}
+                                  </Text>
+                                </View>
+                                <Text style={[styles.arrow, { color: colors.dim }]} pointerEvents="none">›</Text>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        );
+                      });
+                    })()}
                   </View>
                 );
               });
@@ -271,6 +320,26 @@ const styles = StyleSheet.create({
   groupCount: {
     fontSize: 13,
     fontWeight: '500',
+  },
+  dateHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 2,
+    borderRadius: 6,
+  },
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  dateCount: {
+    fontSize: 11,
+    fontWeight: '500',
+    opacity: 0.8,
   },
   emptyText: {
     fontSize: 13,
