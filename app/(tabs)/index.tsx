@@ -57,6 +57,9 @@ import { generateFieldWhispers } from '../_services/fieldWhisper';
 import { JournalList } from '../_components/JournalList';
 import { JournalEntryModal } from '../_components/JournalEntryModal';
 import FieldTransmissions from '../_components/FieldTransmissions';
+import { AlchemicalSymbol } from '../_components/AlchemicalSymbol';
+import { QuickLogModal } from '../_modal/QuickLogModal';
+import { QuickSubstanceLogModal } from '../_modal/QuickSubstanceLogModal';
 
 type Screen = 'home' | 'substances' | 'archetypes' | 'patterns' | 'nourish' | 'transmissions';
 
@@ -178,6 +181,10 @@ export default function HomeScreen() {
   
   // Align Flow state - tracks which items have been aligned in current time period
   const [alignedItems, setAlignedItems] = useState<Set<string>>(new Set());
+  
+  // Quick Log state
+  const [isQuickLogModalVisible, setIsQuickLogModalVisible] = useState(false);
+  const [isQuickSubstanceModalVisible, setIsQuickSubstanceModalVisible] = useState(false);
   
   // ScrollView ref for scrolling to top
   const scrollViewRef = useRef<ScrollView>(null);
@@ -401,6 +408,15 @@ export default function HomeScreen() {
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
         
         <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
+        
+        {/* Quick Log Button - Floating Top Left */}
+        <TouchableOpacity
+          style={styles.quickLogButton}
+          onPress={() => setIsQuickLogModalVisible(true)}
+          activeOpacity={0.7}
+        >
+          <AlchemicalSymbol size={28} color={colors.text} />
+        </TouchableOpacity>
         
         {/* 2x2 Action Grid at Top */}
         <View style={styles.topSection}>
@@ -1377,6 +1393,38 @@ export default function HomeScreen() {
             colors={colors}
           />
         ) : null}
+
+        {/* Quick Log Modals */}
+        <QuickLogModal
+          isVisible={isQuickLogModalVisible}
+          onClose={() => setIsQuickLogModalVisible(false)}
+          onSelectCategory={(category) => {
+            if (category === 'substance') {
+              setIsQuickSubstanceModalVisible(true);
+            } else if (category === 'nourish') {
+              setIsAddFoodModalVisible(true);
+            } else if (category === 'movement') {
+              setIsAddMovementModalVisible(true);
+            }
+          }}
+        />
+
+        <QuickSubstanceLogModal
+          isVisible={isQuickSubstanceModalVisible}
+          onClose={() => setIsQuickSubstanceModalVisible(false)}
+          onSave={(data) => {
+            addSubstanceMoment({
+              substance: data.substance,
+              mythicName: data.mythicName,
+              intention: data.intention,
+              sensation: data.sensation,
+              reflection: data.reflection,
+              timestamp: new Date().toISOString(),
+            });
+            setIsQuickSubstanceModalVisible(false);
+          }}
+          container={activeContainer}
+        />
       </View>
     );
   }
@@ -1433,6 +1481,18 @@ const styles = StyleSheet.create({
     paddingTop: 0, // Moved up - no top padding
     paddingHorizontal: 20,
     paddingBottom: 8, // Add padding between header and content
+  },
+  quickLogButton: {
+    position: 'absolute',
+    top: 12,
+    left: 16,
+    zIndex: 1000,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   actionGrid: {
     flexDirection: 'row',
