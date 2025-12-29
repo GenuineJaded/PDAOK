@@ -424,9 +424,23 @@ export default function HomeScreen() {
         
         <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
         
+        {/* Quick Log Button - Floating Top Left */}
+        <TouchableOpacity
+          style={styles.quickLogButton}
+          onPress={() => {
+            console.log('Quick Log button pressed');
+            setIsQuickLogModalVisible(true);
+          }}
+          activeOpacity={0.7}
+        >
+          <AlchemicalSymbol size={40} color={colors.text} />
+        </TouchableOpacity>
+        
         {/* 2x2 Action Grid at Top */}
-        <View style={styles.topSection}>
-          {renderActionGrid()}
+        <View style={styles.topSection} pointerEvents="box-none">
+          <View pointerEvents="auto">
+            {renderActionGrid()}
+          </View>
         </View>
 
         <ScrollView
@@ -1540,18 +1554,6 @@ export default function HomeScreen() {
           entry={entryToEdit}
           colors={colors}
         />
-        
-        {/* Quick Log Button - Floating Top Left (rendered last to be on top) */}
-        <TouchableOpacity
-          style={styles.quickLogButton}
-          onPress={() => {
-            console.log('Quick Log button pressed');
-            setIsQuickLogModalVisible(true);
-          }}
-          activeOpacity={0.7}
-        >
-          <AlchemicalSymbol size={40} color={colors.text} />
-        </TouchableOpacity>
       </View>
     );
   }
