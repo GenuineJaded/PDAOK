@@ -430,7 +430,7 @@ export default function HomeScreen() {
           onPress={() => setIsQuickLogModalVisible(true)}
           activeOpacity={0.7}
         >
-          <AlchemicalSymbol size={28} color={colors.text} />
+          <AlchemicalSymbol size={40} color={colors.text} />
         </TouchableOpacity>
         
         {/* 2x2 Action Grid at Top */}
@@ -1608,15 +1608,15 @@ const styles = StyleSheet.create({
   },
   quickLogButton: {
     position: 'absolute',
-    top: 12,
-    left: 16,
+    top: 16,
+    left: 20,
     zIndex: 1000,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   actionGrid: {
     flexDirection: 'row',
