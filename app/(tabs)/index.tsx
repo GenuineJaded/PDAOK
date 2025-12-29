@@ -427,10 +427,7 @@ export default function HomeScreen() {
         {/* Quick Log Button - Floating Top Left */}
         <TouchableOpacity
           style={styles.quickLogButton}
-          onPress={() => {
-            console.log('Quick Log button pressed');
-            setIsQuickLogModalVisible(true);
-          }}
+          onPress={() => setIsQuickLogModalVisible(true)}
           activeOpacity={0.7}
         >
           <AlchemicalSymbol size={40} color={colors.text} />
@@ -1384,25 +1381,6 @@ export default function HomeScreen() {
         {/* Time Container Navigation at Bottom */}
         {renderTimeContainerNav()}
 
-        {/* Modal */}
-        <AddFoodModal
-          isVisible={isAddFoodModalVisible}
-          onClose={() => setIsAddFoodModalVisible(false)}
-          onSave={(entry) => {
-            addFoodEntry(entry);
-          }}
-          colors={colors}
-        />
-
-        <AddMovementModal
-          isVisible={isAddMovementModalVisible}
-          onClose={() => setIsAddMovementModalVisible(false)}
-          onAdd={(entry) => {
-            addMovementEntry(entry);
-          }}
-          colors={colors}
-        />
-
         {/* Journal Entry Detail Modal */}
         {selectedJournalEntry ? (
           <JournalEntryModal
@@ -1593,6 +1571,25 @@ export default function HomeScreen() {
           colors={colors}
         />
       )}
+      
+      {/* Global Modals - accessible from Quick Log on home screen */}
+      <AddFoodModal
+        isVisible={isAddFoodModalVisible}
+        onClose={() => setIsAddFoodModalVisible(false)}
+        onSave={(entry) => {
+          addFoodEntry(entry);
+        }}
+        colors={colors}
+      />
+
+      <AddMovementModal
+        isVisible={isAddMovementModalVisible}
+        onClose={() => setIsAddMovementModalVisible(false)}
+        onAdd={(entry) => {
+          addMovementEntry(entry);
+        }}
+        colors={colors}
+      />
     </>
   );
 }
