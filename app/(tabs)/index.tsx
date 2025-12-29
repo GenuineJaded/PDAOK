@@ -1608,7 +1608,7 @@ const styles = StyleSheet.create({
   },
   quickLogButton: {
     position: 'absolute',
-    top: 16,
+    top: 120,
     left: 20,
     zIndex: 1000,
     width: 60,
