@@ -17,6 +17,7 @@ interface JournalListProps {
   emptyMessage?: string;
   onEntryPress?: (entry: JournalEntry) => void;
   grouped?: boolean; // Enable 4-tier grouped mode
+  statsSummary?: string; // Optional stats summary to display
 }
 
 /**
@@ -40,6 +41,7 @@ export const JournalList: React.FC<JournalListProps> = ({
   emptyMessage = 'No entries yet.',
   onEntryPress,
   grouped = false,
+  statsSummary,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -52,7 +54,12 @@ export const JournalList: React.FC<JournalListProps> = ({
           style={[styles.header, { backgroundColor: colors.card + 'B3' }]}
           onPress={() => setIsExpanded(!isExpanded)}
         >
-          <Text style={[styles.title, { color: colors.dim }]}>{title}</Text>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.title, { color: colors.dim }]}>{title}</Text>
+            {statsSummary && (
+              <Text style={[styles.stats, { color: colors.dim }]}>{statsSummary}</Text>
+            )}
+          </View>
           <Text style={[styles.count, { color: colors.text }]}>
             {entries.length} {isExpanded ? '▼' : '▶'}
           </Text>
@@ -156,7 +163,12 @@ export const JournalList: React.FC<JournalListProps> = ({
         style={[styles.header, { backgroundColor: colors.card + 'B3' }]}
         onPress={() => setIsExpanded(!isExpanded)}
       >
-        <Text style={[styles.title, { color: colors.dim }]}>{title}</Text>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.title, { color: colors.dim }]}>{title}</Text>
+          {statsSummary && (
+            <Text style={[styles.stats, { color: colors.dim }]}>{statsSummary}</Text>
+          )}
+        </View>
         <Text style={[styles.count, { color: colors.text }]}>
           {entries.length} {isExpanded ? '▼' : '▶'}
         </Text>
@@ -220,10 +232,19 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 12,
   },
+  headerLeft: {
+    flex: 1,
+    gap: 4,
+  },
   title: {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1.5,
+  },
+  stats: {
+    fontSize: 10,
+    fontWeight: '500',
+    opacity: 0.7,
   },
   count: {
     fontSize: 13,

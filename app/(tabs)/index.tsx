@@ -63,6 +63,7 @@ import { QuickSubstanceLogModal } from '../_modal/QuickSubstanceLogModal';
 import { EditFoodModal } from '../_modal/EditFoodModal';
 import { EditMovementModal } from '../_modal/EditMovementModal';
 import { EditSubstanceModal } from '../_modal/EditSubstanceModal';
+import { calculateJournalStats, getStatsSummary } from '../_utils/journalStats';
 
 type Screen = 'home' | 'substances' | 'archetypes' | 'patterns' | 'nourish' | 'transmissions';
 
@@ -844,6 +845,7 @@ export default function HomeScreen() {
               openEntryModal(entry, 'Substance Reflection', 'substance');
             }}
             grouped={true}
+            statsSummary={getStatsSummary(calculateJournalStats(substanceJournalEntries))}
           />
 
           {/* Substance Transmissions Section */}
@@ -1277,6 +1279,7 @@ export default function HomeScreen() {
             onEntryPress={(entry) => {
               openEntryModal(entry, 'Nourishment Entry', 'food');
             }}
+            statsSummary={getStatsSummary(calculateJournalStats(foodEntries))}
           />
 
             <TouchableOpacity
@@ -1350,6 +1353,7 @@ export default function HomeScreen() {
               onEntryPress={(entry) => {
                 openEntryModal(entry, 'Movement Entry', 'movement');
               }}
+              statsSummary={getStatsSummary(calculateJournalStats(movementEntries))}
             />
 
             <TouchableOpacity
