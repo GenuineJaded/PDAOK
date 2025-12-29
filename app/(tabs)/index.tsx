@@ -424,23 +424,20 @@ export default function HomeScreen() {
         
         <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
         
-        {/* Quick Log Button - Floating Top Left */}
-        <TouchableOpacity
-          style={styles.quickLogButton}
-          onPress={() => {
-            console.log('✨ QUICK LOG BUTTON PRESSED ✨');
-            setIsQuickLogModalVisible(true);
-          }}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.quickLogIcon, { color: colors.text }]}>+</Text>
-        </TouchableOpacity>
-        
-        {/* 2x2 Action Grid at Top */}
-        <View style={styles.topSection} pointerEvents="box-none">
-          <View pointerEvents="auto">
-            {renderActionGrid()}
-          </View>
+        {/* Quick Log Button - Simple Version */}
+        <View style={styles.topSection}>
+          <TouchableOpacity
+            style={[styles.simpleQuickLogButton, { backgroundColor: colors.accent }]}
+            onPress={() => {
+              console.log('✨ QUICK LOG BUTTON PRESSED ✨');
+              setIsQuickLogModalVisible(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.simpleQuickLogText, { color: colors.card }]}>⚡ Quick Log</Text>
+          </TouchableOpacity>
+          
+          {renderActionGrid()}
         </View>
 
         <ScrollView
@@ -1611,26 +1608,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 8, // Add padding between header and content
   },
-  quickLogButton: {
-    position: 'absolute',
-    top: 120,
-    left: 20,
-    zIndex: 1000,
-    elevation: 10,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  simpleQuickLogButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginBottom: 12,
   },
-  quickLogIcon: {
-    fontSize: 32,
-    fontWeight: '300',
+  simpleQuickLogText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   actionGrid: {
     flexDirection: 'row',
