@@ -427,10 +427,13 @@ export default function HomeScreen() {
         {/* Quick Log Button - Floating Top Left */}
         <TouchableOpacity
           style={styles.quickLogButton}
-          onPress={() => setIsQuickLogModalVisible(true)}
+          onPress={() => {
+            console.log('✨ QUICK LOG BUTTON PRESSED ✨');
+            setIsQuickLogModalVisible(true);
+          }}
           activeOpacity={0.7}
         >
-          <AlchemicalSymbol size={40} color={colors.text} />
+          <Text style={[styles.quickLogIcon, { color: colors.text }]}>+</Text>
         </TouchableOpacity>
         
         {/* 2x2 Action Grid at Top */}
@@ -1624,6 +1627,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  quickLogIcon: {
+    fontSize: 32,
+    fontWeight: '300',
   },
   actionGrid: {
     flexDirection: 'row',
