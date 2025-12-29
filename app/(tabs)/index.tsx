@@ -424,15 +424,6 @@ export default function HomeScreen() {
         
         <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
         
-        {/* Quick Log Button - Floating Top Left */}
-        <TouchableOpacity
-          style={styles.quickLogButton}
-          onPress={() => setIsQuickLogModalVisible(true)}
-          activeOpacity={0.7}
-        >
-          <AlchemicalSymbol size={40} color={colors.text} />
-        </TouchableOpacity>
-        
         {/* 2x2 Action Grid at Top */}
         <View style={styles.topSection}>
           {renderActionGrid()}
@@ -1549,6 +1540,18 @@ export default function HomeScreen() {
           entry={entryToEdit}
           colors={colors}
         />
+        
+        {/* Quick Log Button - Floating Top Left (rendered last to be on top) */}
+        <TouchableOpacity
+          style={styles.quickLogButton}
+          onPress={() => {
+            console.log('Quick Log button pressed');
+            setIsQuickLogModalVisible(true);
+          }}
+          activeOpacity={0.7}
+        >
+          <AlchemicalSymbol size={40} color={colors.text} />
+        </TouchableOpacity>
       </View>
     );
   }
@@ -1611,12 +1614,17 @@ const styles = StyleSheet.create({
     top: 120,
     left: 20,
     zIndex: 1000,
+    elevation: 10,
     width: 60,
     height: 60,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   actionGrid: {
     flexDirection: 'row',
