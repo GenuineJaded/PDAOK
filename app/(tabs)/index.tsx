@@ -59,7 +59,7 @@ import { JournalEntryModal } from '../_components/JournalEntryModal';
 import FieldTransmissions from '../_components/FieldTransmissions';
 import { AlchemicalSymbol } from '../_components/AlchemicalSymbol';
 import { QuickLogModal } from '../_modal/QuickLogModal';
-import { QuickSubstanceLogModal } from '../_modal/QuickSubstanceLogModal';
+import { QuickSubstanceSynthesisModal } from '../_modal/QuickSubstanceSynthesisModal';
 import { EditFoodModal } from '../_modal/EditFoodModal';
 import { EditMovementModal } from '../_modal/EditMovementModal';
 import { EditSubstanceModal } from '../_modal/EditSubstanceModal';
@@ -1576,34 +1576,11 @@ export default function HomeScreen() {
         }}
       />
 
-      <QuickSubstanceLogModal
+      <QuickSubstanceSynthesisModal
         isVisible={isQuickSubstanceModalVisible}
         onClose={() => setIsQuickSubstanceModalVisible(false)}
-        onSave={(data) => {
-          // Get current time in 12-hour format
-          const now = new Date();
-          const hours = now.getHours();
-          const minutes = now.getMinutes();
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          const displayHours = hours % 12 || 12;
-          const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
-          const currentTime = `${displayHours}:${displayMinutes} ${ampm}`;
-          
-          addSubstanceMoment({
-            allyName: data.substance,
-            container: activeContainer,
-            tone: currentTime,
-            frequency: data.intention,
-            presence: data.sensation,
-            context: data.reflection,
-            action_reflection: '',
-            result_shift: '',
-            conclusion_offering: '',
-            text: `Quick log: ${data.mythicName}`,
-          });
-          setIsQuickSubstanceModalVisible(false);
-        }}
         container={activeContainer}
+        activeArchetype={activeArchetype}
       />
     </>
   );
