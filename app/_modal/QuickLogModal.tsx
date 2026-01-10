@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { useColors } from '../_hooks/useColors';
+import useColors from '../_hooks/useColors';
 
 interface QuickLogModalProps {
   isVisible: boolean;

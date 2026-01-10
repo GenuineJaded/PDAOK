@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
-import { useColors } from '../_hooks/useColors';
+import useColors from '../_hooks/useColors';
 import { ContainerId } from '../_constants/Types';
 
 interface QuickSubstanceLogModalProps {

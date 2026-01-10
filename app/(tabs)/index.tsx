@@ -1448,38 +1448,6 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        {/* Quick Log Modals */}
-        <QuickLogModal
-          isVisible={isQuickLogModalVisible}
-          onClose={() => setIsQuickLogModalVisible(false)}
-          onSelectCategory={(category) => {
-            if (category === 'substance') {
-              setIsQuickSubstanceModalVisible(true);
-            } else if (category === 'nourish') {
-              setIsAddFoodModalVisible(true);
-            } else if (category === 'movement') {
-              setIsAddMovementModalVisible(true);
-            }
-          }}
-        />
-
-        <QuickSubstanceLogModal
-          isVisible={isQuickSubstanceModalVisible}
-          onClose={() => setIsQuickSubstanceModalVisible(false)}
-          onSave={(data) => {
-            addSubstanceMoment({
-              substance: data.substance,
-              mythicName: data.mythicName,
-              intention: data.intention,
-              sensation: data.sensation,
-              reflection: data.reflection,
-              timestamp: new Date().toISOString(),
-            });
-            setIsQuickSubstanceModalVisible(false);
-          }}
-          container={activeContainer}
-        />
-
         {/* Edit Modals */}
         <EditSubstanceModal
           isVisible={isEditSubstanceModalVisible}
@@ -1591,6 +1559,51 @@ export default function HomeScreen() {
           addMovementEntry(entry);
         }}
         colors={colors}
+      />
+
+      {/* Quick Log Modals - Global so they work from any screen */}
+      <QuickLogModal
+        isVisible={isQuickLogModalVisible}
+        onClose={() => setIsQuickLogModalVisible(false)}
+        onSelectCategory={(category) => {
+          if (category === 'substance') {
+            setIsQuickSubstanceModalVisible(true);
+          } else if (category === 'nourish') {
+            setIsAddFoodModalVisible(true);
+          } else if (category === 'movement') {
+            setIsAddMovementModalVisible(true);
+          }
+        }}
+      />
+
+      <QuickSubstanceLogModal
+        isVisible={isQuickSubstanceModalVisible}
+        onClose={() => setIsQuickSubstanceModalVisible(false)}
+        onSave={(data) => {
+          // Get current time in 12-hour format
+          const now = new Date();
+          const hours = now.getHours();
+          const minutes = now.getMinutes();
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          const displayHours = hours % 12 || 12;
+          const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
+          const currentTime = `${displayHours}:${displayMinutes} ${ampm}`;
+          
+          addSubstanceMoment({
+            allyName: data.substance,
+            container: activeContainer,
+            tone: currentTime,
+            frequency: data.intention,
+            presence: data.sensation,
+            context: data.reflection,
+            action_reflection: '',
+            result_shift: '',
+            conclusion_offering: '',
+            text: `Quick log: ${data.mythicName}`,
+          });
+          setIsQuickSubstanceModalVisible(false);
+        }}
+        container={activeContainer}
       />
     </>
   );
