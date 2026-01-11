@@ -352,15 +352,17 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   substanceSelector: {
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 2,
     overflow: 'hidden',
-    minWidth: 130,
+    minWidth: 160,
+    minHeight: 52,
+    justifyContent: 'center',
   },
   substancePicker: {
-    height: 40,
-    marginTop: -8,
-    marginBottom: -8,
+    height: 52,
+    marginTop: -4,
+    marginBottom: -4,
   },
   selectedIndicator: {
     flexDirection: 'row',

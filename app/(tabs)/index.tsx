@@ -424,23 +424,19 @@ export default function HomeScreen() {
         
         <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
         
-        {/* Quick Log Button - Simple Version */}
+        {/* Top Section with Action Grid */}
         <View style={styles.topSection}>
-          <TouchableOpacity
-            style={[styles.simpleQuickLogButton, { backgroundColor: colors.accent }]}
-            onPress={() => {
-              console.log('✨ QUICK LOG BUTTON PRESSED ✨');
-              console.log('Before setState:', isQuickLogModalVisible);
-              setIsQuickLogModalVisible(true);
-              console.log('After setState call');
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.simpleQuickLogText, { color: colors.card }]}>⚡ Quick Log {isQuickLogModalVisible ? '(OPEN)' : '(CLOSED)'}</Text>
-          </TouchableOpacity>
-          
           {renderActionGrid()}
         </View>
+
+        {/* Floating Quick Log Button - Upper Left */}
+        <TouchableOpacity
+          style={[styles.floatingQuickLogButton, { backgroundColor: colors.accent + 'E6' }]}
+          onPress={() => setIsQuickLogModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.floatingQuickLogIcon}>⚡</Text>
+        </TouchableOpacity>
 
         <ScrollView
           ref={scrollViewRef}
@@ -1600,16 +1596,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 8, // Add padding between header and content
   },
-  simpleQuickLogButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+  floatingQuickLogButton: {
+    position: 'absolute',
+    top: 70,
+    left: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 100,
   },
-  simpleQuickLogText: {
-    fontSize: 16,
-    fontWeight: '600',
+  floatingQuickLogIcon: {
+    fontSize: 22,
   },
   actionGrid: {
     flexDirection: 'row',
