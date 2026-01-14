@@ -149,6 +149,25 @@ export interface Archetype {
   createdTimestamp?: number; // Unix timestamp for easier sorting/filtering
 }
 
+export interface DailyCheckItem {
+  id: string;
+  label: string;
+  emoji: string;
+  completed: boolean;
+}
+
+export interface ActiveTimer {
+  id: string;
+  label: string;
+  endTime: number; // timestamp when timer ends
+  notificationId?: string;
+}
+
+export interface DailyRitualState {
+  checklist: DailyCheckItem[];
+  lastResetDate: string; // YYYY-MM-DD of last 4am reset
+}
+
 export interface AppState {
   items: ContainerItem[];
   allies: Ally[];
@@ -163,5 +182,7 @@ export interface AppState {
   conversations: Conversation[]; // Substance-archetype dialogues
   fieldWhispers: FieldWhisper[]; // Field pattern observations
   activeContainer: ContainerId;
-
+  dailyRituals?: DailyRitualState; // Timer checklist state
+  activeTimers?: ActiveTimer[]; // Currently running timers
 }
+

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { AppState, ContainerItem, Ally, Moment, Completion, ContainerId, Pattern, FoodEntry, MovementEntry, Archetype } from '../_constants/Types';
+import { AppState, ContainerItem, Ally, Moment, Completion, ContainerId, Pattern, FoodEntry, MovementEntry, Archetype, DailyCheckItem, ActiveTimer, DailyRitualState } from '../_constants/Types';
 import { JournalEntry } from '../_constants/Types'; // Keep JournalEntry for backward compatibility if needed, but Moment is the new primary type
 import { DEFAULT_ALLIES, DEFAULT_GROUNDING_ITEMS, DEFAULT_ARCHETYPES } from '../_constants/DefaultData';
 import { ThemeName, DEFAULT_THEME } from '../_constants/Themes';
@@ -43,6 +43,12 @@ interface AppContextType extends AppState {
   removeJournalEntry: (id: string) => void;
   removeSubstanceJournalEntry: (id: string) => void;
   updateSubstanceJournalEntry: (id: string, entry: Partial<Moment>) => void;
+  // Timer & Daily Rituals
+  dailyChecklist: DailyCheckItem[];
+  activeTimers: ActiveTimer[];
+  toggleDailyCheckItem: (id: string) => void;
+  startTimer: (minutes: number, label: string) => Promise<void>;
+  cancelTimer: (id: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -76,6 +82,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeArchetypeId, setActiveArchetypeId] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>(DEFAULT_THEME);
 
+  // Daily Rituals & Timers
+  const DEFAULT_DAILY_CHECKLIST: DailyCheckItem[] = [
+    { id: 'am-shrooms', label: 'AM Shrooms', emoji: '🍄', completed: false },
+    { id: 'pm-shrooms', label: 'PM Shrooms', emoji: '🍄', completed: false },
+    { id: 'sleep-clean-slate', label: 'Sleep Clean Slate', emoji: '🌙', completed: false },
+  ];
+  const [dailyChecklist, setDailyChecklist] = useState<DailyCheckItem[]>(DEFAULT_DAILY_CHECKLIST);
+  const [lastChecklistResetDate, setLastChecklistResetDate] = useState<string>('');
+  const [activeTimers, setActiveTimers] = useState<ActiveTimer[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   // Load data on mount
@@ -91,7 +107,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [items, allies, journalEntries, substanceJournalEntries, completions, patterns, foodEntries, movementEntries, dreamseeds, conversations, fieldWhispers, archetypes, activeContainer, selectedTheme, loading]);
+  }, [items, allies, journalEntries, substanceJournalEntries, completions, patterns, foodEntries, movementEntries, dreamseeds, conversations, fieldWhispers, archetypes, activeContainer, selectedTheme, dailyChecklist, lastChecklistResetDate, activeTimers, loading]);
 
   const loadData = useCallback(async () => {
     // Run migration if needed before loading data
@@ -146,6 +162,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setArchetypes(normalized.archetypes);
       setActiveContainer(normalized.activeContainer);
 
+      // Load daily rituals with 4am reset check
+      const savedRituals = savedState.dailyRituals;
+      const savedTimers = savedState.activeTimers || [];
+      
+      // Check if we need to reset the checklist (4am reset)
+      const now = new Date();
+      const todayResetDate = get4amResetDate(now);
+      
+      if (savedRituals && savedRituals.lastResetDate === todayResetDate) {
+        // Same day, keep the saved state
+        setDailyChecklist(savedRituals.checklist);
+        setLastChecklistResetDate(savedRituals.lastResetDate);
+      } else {
+        // New day (past 4am), reset the checklist
+        setDailyChecklist(DEFAULT_DAILY_CHECKLIST);
+        setLastChecklistResetDate(todayResetDate);
+      }
+      
+      // Filter out expired timers
+      const validTimers = savedTimers.filter((t: ActiveTimer) => t.endTime > Date.now());
+      setActiveTimers(validTimers);
     }
     setLoading(false);
   }, []);
@@ -166,8 +203,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       archetypes,
       activeContainer,
       selectedTheme,
+      dailyRituals: {
+        checklist: dailyChecklist,
+        lastResetDate: lastChecklistResetDate,
+      },
+      activeTimers,
     });
-  }, [items, allies, journalEntries, substanceJournalEntries, completions, patterns, foodEntries, movementEntries, dreamseeds, conversations, fieldWhispers, archetypes, activeContainer, selectedTheme]);
+  }, [items, allies, journalEntries, substanceJournalEntries, completions, patterns, foodEntries, movementEntries, dreamseeds, conversations, fieldWhispers, archetypes, activeContainer, selectedTheme, dailyChecklist, lastChecklistResetDate, activeTimers]);
 
   const addItem = useCallback((item: Omit<ContainerItem, 'id'>) => {
     const now = new Date();
@@ -447,7 +489,107 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setArchetypes(prev => prev.filter(a => a.id !== id));
   }, []);
 
+  // Helper: Get the "reset date" for 4am boundary
+  // If it's before 4am, we're still on "yesterday's" day
+  const get4amResetDate = (date: Date): string => {
+    const d = new Date(date);
+    if (d.getHours() < 4) {
+      d.setDate(d.getDate() - 1);
+    }
+    return d.toISOString().split('T')[0];
+  };
 
+  // Toggle a daily checklist item
+  const toggleDailyCheckItem = useCallback((id: string) => {
+    setDailyChecklist(prev => prev.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
+    ));
+  }, []);
+
+  // Start a timer with notification
+  const startTimer = useCallback(async (minutes: number, label: string) => {
+    const { Notifications } = await import('expo-notifications');
+    
+    // Request permissions if needed
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      console.warn('Notification permissions not granted');
+    }
+    
+    const endTime = Date.now() + (minutes * 60 * 1000);
+    const timerId = generateId();
+    
+    // Schedule notification
+    let notificationId: string | undefined;
+    try {
+      notificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '⏰ Timer Complete',
+          body: label,
+          sound: true,
+        },
+        trigger: {
+          type: 'timeInterval' as any,
+          seconds: minutes * 60,
+        },
+      });
+    } catch (e) {
+      console.error('Failed to schedule notification:', e);
+    }
+    
+    const newTimer: ActiveTimer = {
+      id: timerId,
+      label,
+      endTime,
+      notificationId,
+    };
+    
+    setActiveTimers(prev => [...prev, newTimer]);
+  }, []);
+
+  // Cancel a timer
+  const cancelTimer = useCallback(async (id: string) => {
+    const { Notifications } = await import('expo-notifications');
+    
+    const timer = activeTimers.find(t => t.id === id);
+    if (timer?.notificationId) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(timer.notificationId);
+      } catch (e) {
+        console.error('Failed to cancel notification:', e);
+      }
+    }
+    
+    setActiveTimers(prev => prev.filter(t => t.id !== id));
+  }, [activeTimers]);
+
+  // Check for 4am reset on interval (every minute)
+  useEffect(() => {
+    const checkReset = () => {
+      const now = new Date();
+      const todayResetDate = get4amResetDate(now);
+      
+      if (lastChecklistResetDate && lastChecklistResetDate !== todayResetDate) {
+        // It's a new day (past 4am), reset the checklist
+        setDailyChecklist(DEFAULT_DAILY_CHECKLIST);
+        setLastChecklistResetDate(todayResetDate);
+      }
+    };
+    
+    const interval = setInterval(checkReset, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [lastChecklistResetDate]);
+
+  // Clean up expired timers
+  useEffect(() => {
+    const cleanupTimers = () => {
+      const now = Date.now();
+      setActiveTimers(prev => prev.filter(t => t.endTime > now));
+    };
+    
+    const interval = setInterval(cleanupTimers, 1000); // Check every second
+    return () => clearInterval(interval);
+  }, []);
 
   const value: AppContextType = {
     removeJournalEntry,
@@ -499,6 +641,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedTheme,
     setSelectedTheme,
     loading,
+    // Timer & Daily Rituals
+    dailyChecklist,
+    activeTimers,
+    toggleDailyCheckItem,
+    startTimer,
+    cancelTimer,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

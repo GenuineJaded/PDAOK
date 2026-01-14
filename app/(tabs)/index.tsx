@@ -60,6 +60,7 @@ import FieldTransmissions from '../_components/FieldTransmissions';
 import { AlchemicalSymbol } from '../_components/AlchemicalSymbol';
 import { QuickLogModal } from '../_modal/QuickLogModal';
 import { QuickSubstanceSynthesisModal } from '../_modal/QuickSubstanceSynthesisModal';
+import { TimerModal } from '../_modal/TimerModal';
 import { EditFoodModal } from '../_modal/EditFoodModal';
 import { EditMovementModal } from '../_modal/EditMovementModal';
 import { EditSubstanceModal } from '../_modal/EditSubstanceModal';
@@ -116,6 +117,12 @@ export default function HomeScreen() {
     removeArchetype,
     activeArchetypeId,
     setActiveArchetypeId,
+    // Timer & Daily Rituals
+    dailyChecklist,
+    activeTimers,
+    toggleDailyCheckItem,
+    startTimer,
+    cancelTimer,
   } = useApp();
 
   const { transmissions } = useTransmissions();
@@ -192,6 +199,7 @@ export default function HomeScreen() {
   // Quick Log state
   const [isQuickLogModalVisible, setIsQuickLogModalVisible] = useState(false);
   const [isQuickSubstanceModalVisible, setIsQuickSubstanceModalVisible] = useState(false);
+  const [isTimerModalVisible, setIsTimerModalVisible] = useState(false);
   
   // Edit modal state
   const [isEditFoodModalVisible, setIsEditFoodModalVisible] = useState(false);
@@ -429,14 +437,31 @@ export default function HomeScreen() {
           {renderActionGrid()}
         </View>
 
-        {/* Floating Quick Log Button - Upper Left */}
-        <TouchableOpacity
-          style={[styles.floatingQuickLogButton, { backgroundColor: colors.accent + 'E6' }]}
-          onPress={() => setIsQuickLogModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.floatingQuickLogIcon}>⚡</Text>
-        </TouchableOpacity>
+        {/* Floating Action Buttons Row */}
+        <View style={styles.floatingButtonsContainer}>
+          {/* Quick Log Button - Left */}
+          <TouchableOpacity
+            style={[styles.floatingActionButton, { backgroundColor: colors.accent + 'E6' }]}
+            onPress={() => setIsQuickLogModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.floatingButtonIcon}>⚡</Text>
+          </TouchableOpacity>
+
+          {/* Timer/Rituals Button - Right */}
+          <TouchableOpacity
+            style={[styles.floatingActionButton, styles.floatingTimerButton, { backgroundColor: colors.accent + 'E6' }]}
+            onPress={() => setIsTimerModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.floatingButtonIcon}>⏱️</Text>
+            {activeTimers.length > 0 && (
+              <View style={[styles.timerBadge, { backgroundColor: colors.signal }]}>
+                <Text style={styles.timerBadgeText}>{activeTimers.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <ScrollView
           ref={scrollViewRef}
@@ -1578,6 +1603,17 @@ export default function HomeScreen() {
         container={activeContainer}
         activeArchetype={activeArchetype}
       />
+
+      {/* Timer & Daily Rituals Modal */}
+      <TimerModal
+        isVisible={isTimerModalVisible}
+        onClose={() => setIsTimerModalVisible(false)}
+        dailyChecklist={dailyChecklist}
+        onToggleCheckItem={toggleDailyCheckItem}
+        activeTimers={activeTimers}
+        onStartTimer={startTimer}
+        onCancelTimer={cancelTimer}
+      />
     </>
   );
 }
@@ -1596,13 +1632,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 8, // Add padding between header and content
   },
-  floatingQuickLogButton: {
-    position: 'absolute',
-    top: 70,
-    left: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  floatingButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  floatingActionButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -1610,10 +1651,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    zIndex: 100,
   },
-  floatingQuickLogIcon: {
-    fontSize: 22,
+  floatingTimerButton: {
+    // Additional styles for timer button if needed
+  },
+  floatingButtonIcon: {
+    fontSize: 24,
+  },
+  timerBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  timerBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   actionGrid: {
     flexDirection: 'row',
