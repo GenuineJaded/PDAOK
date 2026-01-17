@@ -58,6 +58,7 @@ import { JournalList } from '../_components/JournalList';
 import { JournalEntryModal } from '../_components/JournalEntryModal';
 import FieldTransmissions from '../_components/FieldTransmissions';
 import { AlchemicalSymbol } from '../_components/AlchemicalSymbol';
+import { GeometricBanner, BannerPattern } from '../_components/GeometricBanner';
 import { QuickLogModal } from '../_modal/QuickLogModal';
 import { QuickSubstanceSynthesisModal } from '../_modal/QuickSubstanceSynthesisModal';
 import { TimerModal } from '../_modal/TimerModal';
@@ -198,6 +199,9 @@ export default function HomeScreen() {
   
   // Quick Log state
   const [isQuickLogModalVisible, setIsQuickLogModalVisible] = useState(false);
+  
+  // Banner pattern - change this to switch between: 'sacred' | 'grid' | 'waveform'
+  const [bannerPattern, setBannerPattern] = useState<BannerPattern>('waveform');
   const [isQuickSubstanceModalVisible, setIsQuickSubstanceModalVisible] = useState(false);
   const [isTimerModalVisible, setIsTimerModalVisible] = useState(false);
   
@@ -437,7 +441,7 @@ export default function HomeScreen() {
           {renderActionGrid()}
         </View>
 
-        {/* Floating Action Buttons Row */}
+        {/* Floating Action Buttons Row with Geometric Banner */}
         <View style={styles.floatingButtonsContainer}>
           {/* Quick Log Button - Left */}
           <TouchableOpacity
@@ -447,6 +451,16 @@ export default function HomeScreen() {
           >
             <Text style={styles.floatingButtonIcon}>⚡</Text>
           </TouchableOpacity>
+
+          {/* Geometric Banner - Center */}
+          <View style={styles.bannerContainer}>
+            <GeometricBanner
+              pattern={bannerPattern}
+              color={colors.accent}
+              width={200}
+              height={44}
+            />
+          </View>
 
           {/* Timer/Rituals Button - Right */}
           <TouchableOpacity
@@ -1639,6 +1653,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 4,
     marginBottom: 8,
+  },
+  bannerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 8,
   },
   floatingActionButton: {
     width: 52,
