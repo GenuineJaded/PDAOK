@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
 import Svg, { Path, Line, Circle, G } from 'react-native-svg';
 
 export type BannerPattern = 'sacred' | 'grid' | 'waveform';
@@ -9,6 +9,7 @@ interface GeometricBannerProps {
   color: string;
   width?: number;
   height?: number;
+  animated?: boolean; // Enable breathing animation for waveform
 }
 
 /**
@@ -177,10 +178,9 @@ const MinimalGridPattern: React.FC<{ color: string; width: number; height: numbe
 };
 
 /**
- * Waveform Pattern
- * Subtle sine-wave lines suggesting frequency/field energy
+ * Static Waveform Pattern (non-animated)
  */
-const WaveformPattern: React.FC<{ color: string; width: number; height: number }> = ({ 
+const StaticWaveformPattern: React.FC<{ color: string; width: number; height: number }> = ({ 
   color, 
   width, 
   height 
@@ -190,7 +190,6 @@ const WaveformPattern: React.FC<{ color: string; width: number; height: number }
   const amplitude2 = height * 0.15;
   const amplitude3 = height * 0.08;
   
-  // Generate smooth wave path
   const generateWavePath = (amp: number, frequency: number, phaseShift: number = 0) => {
     const points = [];
     const steps = 60;
@@ -204,7 +203,6 @@ const WaveformPattern: React.FC<{ color: string; width: number; height: number }
   
   return (
     <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-      {/* Primary wave - most prominent */}
       <Path
         d={generateWavePath(amplitude1, 2, 0)}
         stroke={color}
@@ -212,8 +210,6 @@ const WaveformPattern: React.FC<{ color: string; width: number; height: number }
         fill="none"
         opacity={0.4}
       />
-      
-      {/* Secondary wave - offset phase */}
       <Path
         d={generateWavePath(amplitude2, 3, Math.PI / 4)}
         stroke={color}
@@ -221,8 +217,6 @@ const WaveformPattern: React.FC<{ color: string; width: number; height: number }
         fill="none"
         opacity={0.3}
       />
-      
-      {/* Tertiary wave - higher frequency, subtle */}
       <Path
         d={generateWavePath(amplitude3, 5, Math.PI / 2)}
         stroke={color}
@@ -230,8 +224,6 @@ const WaveformPattern: React.FC<{ color: string; width: number; height: number }
         fill="none"
         opacity={0.2}
       />
-      
-      {/* Center baseline */}
       <Line
         x1={0}
         y1={centerY}
@@ -247,6 +239,122 @@ const WaveformPattern: React.FC<{ color: string; width: number; height: number }
 };
 
 /**
+ * Animated Waveform Pattern with breathing effect
+ * The waves gently expand and contract like breathing
+ */
+const AnimatedWaveformPattern: React.FC<{ color: string; width: number; height: number }> = ({ 
+  color, 
+  width, 
+  height 
+}) => {
+  const breathAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    // Create a continuous breathing animation
+    const breathingCycle = Animated.loop(
+      Animated.sequence([
+        // Inhale - expand
+        Animated.timing(breathAnim, {
+          toValue: 1,
+          duration: 4000, // 4 seconds to inhale
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        // Exhale - contract
+        Animated.timing(breathAnim, {
+          toValue: 0,
+          duration: 4000, // 4 seconds to exhale
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    
+    breathingCycle.start();
+    
+    return () => breathingCycle.stop();
+  }, [breathAnim]);
+  
+  // Interpolate scale for breathing effect
+  const scale = breathAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.85, 1.15], // Subtle scale range
+  });
+  
+  // Interpolate opacity for additional depth
+  const opacity = breathAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.7, 1, 0.7],
+  });
+  
+  const centerY = height / 2;
+  const amplitude1 = height * 0.25;
+  const amplitude2 = height * 0.15;
+  const amplitude3 = height * 0.08;
+  
+  const generateWavePath = (amp: number, frequency: number, phaseShift: number = 0) => {
+    const points = [];
+    const steps = 60;
+    for (let i = 0; i <= steps; i++) {
+      const x = (i / steps) * width;
+      const y = centerY + Math.sin(((i / steps) * Math.PI * frequency) + phaseShift) * amp;
+      points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+    }
+    return points.join(' ');
+  };
+  
+  return (
+    <Animated.View 
+      style={{ 
+        transform: [{ scaleY: scale }],
+        opacity,
+      }}
+    >
+      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        {/* Primary wave - most prominent */}
+        <Path
+          d={generateWavePath(amplitude1, 2, 0)}
+          stroke={color}
+          strokeWidth={1.5}
+          fill="none"
+          opacity={0.4}
+        />
+        
+        {/* Secondary wave - offset phase */}
+        <Path
+          d={generateWavePath(amplitude2, 3, Math.PI / 4)}
+          stroke={color}
+          strokeWidth={1}
+          fill="none"
+          opacity={0.3}
+        />
+        
+        {/* Tertiary wave - higher frequency, subtle */}
+        <Path
+          d={generateWavePath(amplitude3, 5, Math.PI / 2)}
+          stroke={color}
+          strokeWidth={0.75}
+          fill="none"
+          opacity={0.2}
+        />
+        
+        {/* Center baseline - doesn't animate */}
+        <Line
+          x1={0}
+          y1={centerY}
+          x2={width}
+          y2={centerY}
+          stroke={color}
+          strokeWidth={0.5}
+          opacity={0.15}
+          strokeDasharray="4,4"
+        />
+      </Svg>
+    </Animated.View>
+  );
+};
+
+/**
  * GeometricBanner Component
  * Renders a precise geometric pattern in the header area
  */
@@ -255,6 +363,7 @@ export const GeometricBanner: React.FC<GeometricBannerProps> = ({
   color,
   width = 200,
   height = 40,
+  animated = true, // Default to animated
 }) => {
   const renderPattern = () => {
     switch (pattern) {
@@ -263,9 +372,13 @@ export const GeometricBanner: React.FC<GeometricBannerProps> = ({
       case 'grid':
         return <MinimalGridPattern color={color} width={width} height={height} />;
       case 'waveform':
-        return <WaveformPattern color={color} width={width} height={height} />;
+        return animated 
+          ? <AnimatedWaveformPattern color={color} width={width} height={height} />
+          : <StaticWaveformPattern color={color} width={width} height={height} />;
       default:
-        return <WaveformPattern color={color} width={width} height={height} />;
+        return animated 
+          ? <AnimatedWaveformPattern color={color} width={width} height={height} />
+          : <StaticWaveformPattern color={color} width={width} height={height} />;
     }
   };
 
@@ -280,6 +393,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden', // Clip any overflow from scale animation
   },
 });
 
