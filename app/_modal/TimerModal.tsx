@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Modal,
-  TextInput,
-  Vibration,
-  AppState,
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import useColors from '../_hooks/useColors';
@@ -61,7 +58,6 @@ export const TimerModal: React.FC<TimerModalProps> = ({
   onCancelTimer,
 }) => {
   const colors = useColors();
-  const [customMinutes, setCustomMinutes] = useState('');
   const [now, setNow] = useState(Date.now());
   
   // Update "now" every second to show countdown
@@ -90,14 +86,6 @@ export const TimerModal: React.FC<TimerModalProps> = ({
 
   const handleStartPreset = (minutes: number, label: string) => {
     onStartTimer(minutes, label);
-  };
-
-  const handleStartCustom = () => {
-    const mins = parseInt(customMinutes, 10);
-    if (mins > 0 && mins <= 480) { // Max 8 hours
-      onStartTimer(mins, `${mins} min timer`);
-      setCustomMinutes('');
-    }
   };
 
   if (!isVisible) return null;
@@ -152,46 +140,21 @@ export const TimerModal: React.FC<TimerModalProps> = ({
             <View style={styles.presetRow}>
               <TouchableOpacity
                 style={[styles.presetButton, { backgroundColor: colors.accent }]}
-                onPress={() => handleStartPreset(30, '30 min (Supplement Gap)')}
+                onPress={() => handleStartPreset(30, '30 min')}
               >
                 <Text style={[styles.presetButtonText, { color: colors.card }]}>30 min</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.presetButton, { backgroundColor: colors.accent }]}
-                onPress={() => handleStartPreset(120, '2 hours (Post-Stack)')}
+                onPress={() => handleStartPreset(60, '1 hour')}
+              >
+                <Text style={[styles.presetButtonText, { color: colors.card }]}>1 hour</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.presetButton, { backgroundColor: colors.accent }]}
+                onPress={() => handleStartPreset(120, '2 hours')}
               >
                 <Text style={[styles.presetButtonText, { color: colors.card }]}>2 hours</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Custom Timer */}
-            <View style={styles.customTimerRow}>
-              <TextInput
-                style={[styles.customInput, { 
-                  backgroundColor: colors.bg, 
-                  color: colors.text,
-                  borderColor: colors.dim 
-                }]}
-                placeholder="Min"
-                placeholderTextColor={colors.dim}
-                keyboardType="number-pad"
-                value={customMinutes}
-                onChangeText={setCustomMinutes}
-                maxLength={3}
-              />
-              <TouchableOpacity
-                style={[styles.customButton, { 
-                  backgroundColor: customMinutes ? colors.accent : colors.bg,
-                  borderColor: colors.dim
-                }]}
-                onPress={handleStartCustom}
-                disabled={!customMinutes}
-              >
-                <Text style={[styles.customButtonText, { 
-                  color: customMinutes ? colors.card : colors.dim 
-                }]}>
-                  Start Custom
-                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -288,32 +251,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  customTimerRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 12,
-  },
-  customInput: {
-    width: 70,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    borderWidth: 1,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  customButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  customButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
+
   activeTimerRow: {
     flexDirection: 'row',
     alignItems: 'center',

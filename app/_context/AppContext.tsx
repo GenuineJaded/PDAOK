@@ -87,6 +87,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     { id: 'am-shrooms', label: 'AM Shrooms', emoji: '🍄', completed: false },
     { id: 'pm-shrooms', label: 'PM Shrooms', emoji: '🍄', completed: false },
     { id: 'sleep-clean-slate', label: 'Sleep Clean Slate', emoji: '🌙', completed: false },
+    { id: 'psyllium-husk', label: 'Psyllium Husk', emoji: '🌾', completed: false },
   ];
   const [dailyChecklist, setDailyChecklist] = useState<DailyCheckItem[]>(DEFAULT_DAILY_CHECKLIST);
   const [lastChecklistResetDate, setLastChecklistResetDate] = useState<string>('');
