@@ -506,35 +506,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ));
   }, []);
 
-  // Start a timer with notification
+  // Start a timer with optional notification (notifications don't work in Expo Go)
   const startTimer = useCallback(async (minutes: number, label: string) => {
-    const { Notifications } = await import('expo-notifications');
-    
-    // Request permissions if needed
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      console.warn('Notification permissions not granted');
-    }
-    
     const endTime = Date.now() + (minutes * 60 * 1000);
     const timerId = generateId();
     
-    // Schedule notification
+    // Try to schedule notification (will fail silently in Expo Go)
     let notificationId: string | undefined;
     try {
-      notificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '⏰ Timer Complete',
-          body: label,
-          sound: true,
-        },
-        trigger: {
-          type: 'timeInterval' as any,
-          seconds: minutes * 60,
-        },
-      });
+      const Notifications = await import('expo-notifications').then(m => m.default || m);
+      if (Notifications?.requestPermissionsAsync) {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status === 'granted' && Notifications?.scheduleNotificationAsync) {
+          notificationId = await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '⏰ Timer Complete',
+              body: label,
+              sound: true,
+            },
+            trigger: {
+              type: 'timeInterval' as any,
+              seconds: minutes * 60,
+            },
+          });
+        }
+      }
     } catch (e) {
-      console.error('Failed to schedule notification:', e);
+      // Notifications not available (Expo Go) - timer will still work, just no push notification
+      console.log('Notifications not available - timer will work without alerts');
     }
     
     const newTimer: ActiveTimer = {
@@ -549,14 +548,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Cancel a timer
   const cancelTimer = useCallback(async (id: string) => {
-    const { Notifications } = await import('expo-notifications');
-    
     const timer = activeTimers.find(t => t.id === id);
+    
+    // Try to cancel notification if one was scheduled
     if (timer?.notificationId) {
       try {
-        await Notifications.cancelScheduledNotificationAsync(timer.notificationId);
+        const Notifications = await import('expo-notifications').then(m => m.default || m);
+        if (Notifications?.cancelScheduledNotificationAsync) {
+          await Notifications.cancelScheduledNotificationAsync(timer.notificationId);
+        }
       } catch (e) {
-        console.error('Failed to cancel notification:', e);
+        // Notifications not available - just remove the timer
       }
     }
     

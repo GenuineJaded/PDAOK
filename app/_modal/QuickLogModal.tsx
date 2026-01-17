@@ -19,14 +19,9 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
 }) => {
   const colors = useColors();
   
-  console.log('🎯 QuickLogModal render - isVisible:', isVisible);
-  
   if (!isVisible) {
-    console.log('❌ Modal not visible, returning null');
     return null;
   }
-  
-  console.log('✅ Modal IS visible, rendering...');
 
   const categories = [
     { id: 'substance' as const, label: 'Substance', emoji: '🌿' },
@@ -34,8 +29,6 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
     { id: 'movement' as const, label: 'Movement', emoji: '🏃' },
   ];
 
-  console.log('📱 About to return Modal component');
-  
   return (
     <Modal
       visible={isVisible}

@@ -13,6 +13,7 @@ import { LogBox } from 'react-native';
 LogBox.ignoreLogs([
   'Text strings must be rendered within a <Text> component.',
   'Non-serializable values were found in the navigation state',
+  '[Layout children]:', // Expo Router incorrectly warns about underscore-prefixed folders
 ]);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from './_components/ErrorBoundary';
