@@ -195,6 +195,7 @@ export function onPhaseChange(callback: PhaseChangeCallback): () => void {
 // ============================================================================
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
+let isSchedulerInitialized = false; // Module-level flag to prevent multiple initializations
 
 /**
  * The main scheduler tick
@@ -259,11 +260,26 @@ async function schedulerTick(): Promise<void> {
  * Start the breathing scheduler
  */
 export async function startBreathingScheduler(): Promise<void> {
+  // Check module-level flag first (synchronous, prevents race conditions)
+  if (isSchedulerInitialized) {
+    console.log('[BreathingScheduler] Already initialized (module flag)');
+    return;
+  }
+  
+  // Check if interval is already running
+  if (schedulerInterval !== null) {
+    console.log('[BreathingScheduler] Interval already exists');
+    return;
+  }
+  
+  // Set flag immediately to prevent concurrent calls
+  isSchedulerInitialized = true;
+  
   const state = await loadSchedulerState();
   
   if (state.isRunning) {
-    console.log('[BreathingScheduler] Already running');
-    return;
+    console.log('[BreathingScheduler] Already running (persisted state)');
+    // Still set up the interval since we may have restarted the app
   }
   
   state.isRunning = true;
@@ -287,6 +303,9 @@ export async function stopBreathingScheduler(): Promise<void> {
     clearInterval(schedulerInterval);
     schedulerInterval = null;
   }
+  
+  // Reset module-level flag
+  isSchedulerInitialized = false;
   
   const state = await loadSchedulerState();
   state.isRunning = false;
