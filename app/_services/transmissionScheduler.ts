@@ -26,6 +26,9 @@ const ENTITY_LAST_TRANSMISSION_KEY = '@pda_entity_last_transmissions';
 // Check for new transmissions every 2 hours
 const CHECK_INTERVAL_MS = 2 * 60 * 60 * 1000;
 
+// Module-level flag to prevent multiple scheduler initializations
+let isSchedulerInitialized = false;
+
 /**
  * Stored transmission data
  */
@@ -427,6 +430,12 @@ export async function checkAndGenerateTransmissions(
 export function initializeTransmissionScheduler(
   getContext: () => TransmissionContext
 ): void {
+  // Prevent multiple initializations (React StrictMode, re-renders, etc.)
+  if (isSchedulerInitialized) {
+    return;
+  }
+  isSchedulerInitialized = true;
+
   // Check immediately on init
   setTimeout(() => {
     const context = getContext();
