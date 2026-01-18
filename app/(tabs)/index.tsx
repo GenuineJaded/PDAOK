@@ -66,6 +66,9 @@ import { EditFoodModal } from '../_modal/EditFoodModal';
 import { EditMovementModal } from '../_modal/EditMovementModal';
 import { EditSubstanceModal } from '../_modal/EditSubstanceModal';
 import { calculateJournalStats, getStatsSummary } from '../_utils/journalStats';
+import { CouncilToast } from '../_components/CouncilToast';
+import { useCouncil } from '../_hooks/useCouncil';
+import { startBreathingScheduler, recordSchedulerActivity } from '../_services/council';
 
 type Screen = 'home' | 'substances' | 'archetypes' | 'patterns' | 'nourish' | 'transmissions';
 
@@ -127,6 +130,13 @@ export default function HomeScreen() {
   } = useApp();
 
   const { transmissions } = useTransmissions();
+
+  // Council Voice System
+  const {
+    currentTransmission,
+    dismissTransmission,
+    recordActivity: recordCouncilActivity,
+  } = useCouncil();
 
   const activeArchetype = activeArchetypeId 
     ? archetypes.find(a => a.id === activeArchetypeId) || null
@@ -233,6 +243,13 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
+  // Initialize Council Breathing Scheduler on mount
+  useEffect(() => {
+    startBreathingScheduler();
+    console.log('[Council] Breathing scheduler started');
+    // No cleanup needed - scheduler persists across component lifecycle
+  }, []);
+
   // Detect container changes and show threshold card (only for automatic transitions)
   useEffect(() => {
     if (previousContainer !== activeContainer && currentScreen === 'home') {
@@ -256,6 +273,8 @@ export default function HomeScreen() {
   const handleCompletion = (itemId: string) => {
     setShowCompletionPulse(true);   // Show pulse animation
     // Note: toggleCompletion is called before this in onComplete handler
+    // Record activity for Council breathing scheduler
+    recordSchedulerActivity();
   };
 
   // When pulse completes, show shift toast
@@ -313,6 +332,8 @@ export default function HomeScreen() {
   // Mark an item as aligned (for Align Flow visual feedback)
   const markAsAligned = (itemId: string) => {
     setAlignedItems(prev => new Set(prev).add(itemId));
+    // Record activity for Council breathing scheduler
+    recordSchedulerActivity();
   };
 
   if (loading) {
@@ -1564,6 +1585,14 @@ export default function HomeScreen() {
   return (
     <>
       {screenContent}
+
+      {/* Council Voice System Toast - Global, appears on all screens */}
+      <CouncilToast
+        transmission={currentTransmission}
+        colors={colors}
+        container={activeContainer}
+        onDismiss={dismissTransmission}
+      />
 
       {/* Shared Journal Entry Modal - used by all sub-screens except home */}
       {selectedJournalEntry && (
