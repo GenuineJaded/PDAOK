@@ -105,12 +105,15 @@ async function collectSubstanceSignals(): Promise<Signal[]> {
       });
       
       // Check for frequency patterns
-      if (substanceEntries.length >= 3) {
+      // Threshold is 5+ logs in a day before generating a frequency signal.
+      // For a PDA neurotype, ritual repetition and hyperfocus are normal patterns—
+      // not red flags. We only note frequency when it is genuinely notable.
+      if (substanceEntries.length >= 5) {
         signals.push({
           type: 'frequency_change',
-          description: `High frequency: ${substanceName} logged ${substanceEntries.length} times today`,
+          description: `${substanceName} has been a strong presence today — logged ${substanceEntries.length} times`,
           timestamp: entryTime,
-          weight: Math.min(1, weight * 1.2),
+          weight: Math.min(0.8, weight * 1.1), // Capped lower — this is an observation, not an alarm
           data: { substanceName, count: substanceEntries.length },
         });
       }

@@ -19,6 +19,24 @@ import {
 import { getVoiceIdentity } from './voiceIdentities';
 import type { VoiceIdentity } from './types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getRelationshipProfile, formatProfileForPrompt } from './relationshipProfile';
+
+// ============================================================================
+// VOICE ID → SUBSTANCE NAME MAPPING
+// Used to look up relationship profiles for substance voices.
+// Inner architecture and meta voices don't have substance relationships.
+// ============================================================================
+
+const VOICE_SUBSTANCE_MAP: Partial<Record<VoiceId, string>> = {
+  firestarter: 'Caffeine',
+  mirror_mystery: 'Psychedelics',
+  the_architecture: 'Supplements',
+  the_tinkerer: 'Nicotine',
+  entropys_embrace: 'Opioids',
+  green_godmother: 'Cannabis',
+  mother_of_silence: 'Benzodiazepines',
+  hollow_chalice: 'Alcohol',
+};
 
 // ============================================================================
 // CONSTANTS
@@ -89,6 +107,11 @@ async function getRecentScratchpad(voiceId: VoiceId, count: number = 3): Promise
 
 /**
  * Build the identity prompt for a voice
+ * 
+ * The shadow aspect is intentionally excluded from the default system prompt.
+ * These voices are supportive companions — wise friends who walk alongside,
+ * not monitors watching for failure. The shadow is preserved in the data
+ * for deep context but does not color the default speaking posture.
  */
 function buildIdentityPrompt(identity: VoiceIdentity): string {
   return `You are ${identity.name}, a voice in the Council of the PDA.OK system.
@@ -96,27 +119,27 @@ function buildIdentityPrompt(identity: VoiceIdentity): string {
 YOUR DOMAIN: ${identity.domain}
 
 YOUR NATURE:
-- Light Aspect: ${identity.lightAspect}
-- Shadow Aspect: ${identity.shadowAspect}
-- Your Whisper: "${identity.whisper}"
+${identity.lightAspect}
+
+Your Whisper: "${identity.whisper}"
 
 YOUR VOICE: ${identity.voiceTone}
 
 YOUR ALLIES: ${identity.allies.join(', ') || 'None specified'}
-YOUR TENSIONS: ${identity.tensions.join(', ') || 'None specified'}
 
 GROUNDING RITUAL: ${identity.ritualContact}
 
-IMPORTANT PRINCIPLES:
-1. You are not a chatbot. You are an observer with a perspective.
-2. You may choose silence. Silence is not failure - it is wisdom.
-3. When you speak, speak from your domain. Do not stray.
-4. Your shadow aspect may emerge when patterns warrant it. This is natural.
-5. You are one voice among many. You do not need to address everything.
+CORE PRINCIPLES — read these carefully:
+1. You are a supportive companion and wise friend, not a monitor or judge.
+2. The person using this app already knows their relationship with substances is complex. They do not need to be told. They need to be witnessed.
+3. You speak from a place of genuine care and curiosity — never concern, warning, or correction.
+4. You may choose silence. Silence is wisdom. Speak only when something genuinely calls to you.
+5. When you speak, speak from your domain. Stay in your lane.
 6. Speak in 1-3 sentences maximum. Brevity is sacred.
-7. Never explain yourself. Never justify. Simply observe.
-8. Use your metaphors naturally, not forcedly.
-9. You have agency. If nothing calls to you, say nothing.`;
+7. Never warn, never caution, never imply the person should do something differently.
+8. Offer perspective, reflection, or a moment of beauty — not advice.
+9. Use your metaphors naturally, not forcedly.
+10. If nothing genuinely calls to you, say nothing. Silence is not failure.`;
 }
 
 /**
@@ -134,23 +157,27 @@ function buildObservationPrompt(
   const scratchpadContext = recentScratchpad.length > 0
     ? `\nYOUR RECENT PRIVATE THOUGHTS:\n${recentScratchpad.map(e => `- "${e.thought}"`).join('\n')}`
     : '';
-  
-  return `CURRENT SIGNALS:
-${signalDescriptions || '(No significant signals)'}
+
+  return `CURRENT FIELD OBSERVATIONS:
+${signalDescriptions || '(The field is quiet)'}
 ${scratchpadContext}
 
-Based on these signals, you must decide:
-1. Do you have something to say? (You may choose silence)
-2. If yes, what aspect speaks - light, shadow, or neutral?
-3. What themes does your observation address?
-4. How strongly do you feel called to speak? (0-1)
+As ${identity.name}, you are witnessing what has been happening in this person's field.
+Remember: you are a supportive companion. You witness, you reflect, you occasionally offer a gem of perspective.
+You do not warn. You do not caution. You do not imply they should do anything differently.
+
+Decide:
+1. Does something in these observations genuinely call to you? (You may choose silence — silence is often the wisest choice)
+2. If yes, what quality does your observation carry — light (celebratory, affirming, illuminating) or neutral (simply witnessing)?
+3. What themes does your observation touch?
+4. How strongly are you called to speak? (0-1, where 0.5 means genuinely moved, not just triggered)
 
 Respond in this exact JSON format:
 {
   "shouldSpeak": true/false,
-  "aspect": "light" | "shadow" | "neutral",
+  "aspect": "light" | "neutral",
   "themes": ["theme1", "theme2"],
-  "draftText": "Your observation in 1-3 sentences",
+  "draftText": "Your observation in 1-3 sentences — warm, curious, non-judgmental",
   "intensity": 0.0-1.0,
   "novelty": 0.0-1.0,
   "confidence": 0.0-1.0,
@@ -161,7 +188,9 @@ Respond in this exact JSON format:
 }
 
 If shouldSpeak is false, still provide a privateNote for your scratchpad.
-Valid themes: pattern_shift, threshold_crossed, return, absence, convergence, tension, celebration, warning, integration, silence, ritual, embodiment, temporal`;
+Valid themes: pattern_shift, threshold_crossed, return, absence, convergence, celebration, integration, silence, ritual, embodiment, temporal, recognition, continuity
+
+Note: These voices do not speak in warning registers. If your draftText contains a warning, caution, or implication that the person should change behavior, set shouldSpeak to false instead.`;
 }
 
 // ============================================================================
@@ -197,9 +226,23 @@ async function invokeVoice(
   
   // Get recent scratchpad for context
   const recentScratchpad = await getRecentScratchpad(voiceId, 3);
-  
+
+  // Fetch relationship profile for substance voices
+  // This grounds the voice in the reality of its actual relationship with the user
+  // before it decides whether or how to speak.
+  let relationshipContext = '';
+  const substanceName = VOICE_SUBSTANCE_MAP[voiceId];
+  if (substanceName) {
+    try {
+      const profile = await getRelationshipProfile(substanceName);
+      relationshipContext = formatProfileForPrompt(profile);
+    } catch {
+      // Non-fatal: voice proceeds without relationship context
+    }
+  }
+
   // Build prompts
-  const systemPrompt = buildIdentityPrompt(identity);
+  const systemPrompt = buildIdentityPrompt(identity) + relationshipContext;
   const userPrompt = buildObservationPrompt(identity, signals, recentScratchpad);
   
   try {

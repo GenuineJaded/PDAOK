@@ -311,6 +311,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     setSubstanceJournalEntries(prev => [newMoment, ...prev]);
 
+    // Invalidate relationship profile cache for this substance so voices
+    // have fresh data the next time they are invoked.
+    if (newMoment.allyName) {
+      (async () => {
+        const { invalidateRelationshipProfile } = await import('../_services/council/relationshipProfile');
+        await invalidateRelationshipProfile(newMoment.allyName!);
+      })();
+    }
+
     // Notify Field Arbiter and write agent journal entry
     (async () => {
       const { processEvent, logDecision } = await import('../_services/fieldArbiter');

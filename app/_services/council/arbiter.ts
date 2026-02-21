@@ -263,10 +263,9 @@ function calculateScore(petition: Petition, state: ArbiterState, keys: ThreeKeys
     score -= 0.15;
   }
   
-  // Shadow aspect slight penalty (should emerge less often)
-  if (petition.aspect === 'shadow') {
-    score -= 0.1;
-  }
+  // Shadow aspect: no penalty applied.
+  // The voice engine now only generates 'light' or 'neutral' aspects by default.
+  // If a shadow aspect somehow surfaces, it passed the voice's own judgment and should not be penalized here.
   
   return Math.max(0, Math.min(1, score));
 }
