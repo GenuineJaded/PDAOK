@@ -231,7 +231,7 @@ export async function checkAndGenerateTransmissions(
 
   const anchorCompletions = context.anchors
     .flatMap(anchor => 
-      anchor.completions?.map(c => ({
+      anchor.completions?.map((c: { timestamp: any; timeContainer: any }) => ({
         anchorId: anchor.id,
         anchorName: anchor.name,
         timestamp: c.timestamp,

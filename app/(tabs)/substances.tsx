@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../_context/AppContext';
+import { Ally } from '../_constants/Types';
 import useColors from '../_hooks/useColors';
 import { useTransmissions } from '../_hooks/useTransmissions';
 import { AllyCard } from '../_components/AllyCard';
@@ -36,7 +37,7 @@ export default function SubstancesScreen() {
   const [isAddAllyModalVisible, setIsAddAllyModalVisible] = useState(false);
   const [isEditAllyModalVisible, setIsEditAllyModalVisible] = useState(false);
   const [isSynthesisModalVisible, setIsSynthesisModalVisible] = useState(false);
-  const [allyToEdit, setAllyToEdit] = useState(null);
+  const [allyToEdit, setAllyToEdit] = useState<Ally | null>(null);
   const [momentToSynthesize, setMomentToSynthesize] = useState<any>({});
   const [selectedJournalEntry, setSelectedJournalEntry] = useState<any>(null);
   const [isJournalEntryModalVisible, setIsJournalEntryModalVisible] = useState(false);
@@ -236,20 +237,20 @@ export default function SubstancesScreen() {
         >
           <Text style={[styles.tierTitle, { color: colors.dim }]}>RECENT TRANSMISSIONS</Text>
           <Text style={[styles.tierCount, { color: colors.text }]}>
-            {transmissions.filter(t => t.entityType === 'substance').length} {isTransmissionsExpanded ? '▼' : '▶'}
+            {transmissions.filter(t => t.type === 'substance').length} {isTransmissionsExpanded ? '▼' : '▶'}
           </Text>
         </TouchableOpacity>
 
         {/* Tier 2: Expanded List */}
         {isTransmissionsExpanded && (
           <View style={[styles.tierList, { backgroundColor: colors.card + 'B3' }]}>
-            {transmissions.filter(t => t.entityType === 'substance').length === 0 ? (
+            {transmissions.filter(t => t.type === 'substance').length === 0 ? (
               <Text style={[styles.emptyText, { color: colors.dim }]}>
                 The substances are listening. As patterns emerge, they will begin to speak.
               </Text>
             ) : (
               transmissions
-                .filter(t => t.entityType === 'substance')
+                .filter(t => t.type === 'substance')
                 .slice(0, 10)
                 .map((transmission) => {
                   const formattedDate = new Date(transmission.timestamp).toLocaleDateString();
@@ -281,9 +282,9 @@ export default function SubstancesScreen() {
                   );
                 })
             )}
-            {transmissions.filter(t => t.entityType === 'substance').length > 10 && (
+            {transmissions.filter(t => t.type === 'substance').length > 10 && (
               <Text style={[styles.moreText, { color: colors.dim }]}>
-                Showing 10 most recent of {transmissions.filter(t => t.entityType === 'substance').length} total
+                Showing 10 most recent of {transmissions.filter(t => t.type === 'substance').length} total
               </Text>
             )}
           </View>
@@ -493,9 +494,6 @@ const styles = StyleSheet.create({
   entryTitle: {
     fontSize: 17,
     fontWeight: '600',
-  },
-  entryDate: {
-    fontSize: 13,
   },
   checkInRow: {
     flexDirection: 'row',

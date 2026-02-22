@@ -191,10 +191,11 @@ const VOICE_POLICIES: Record<VoiceName, VoicePolicy> = {
 /**
  * Surface-specific global cooldowns (in seconds)
  */
-const SURFACE_COOLDOWNS = {
+const SURFACE_COOLDOWNS: Record<Surface, number> = {
   toast: 45,              // 45s after any toast
   transmission: 180,      // 3min after any transmission
   daily_synthesis: 600,   // 10min after any synthesis
+  none: 0,               // No cooldown for gated/blocked
 };
 
 /**

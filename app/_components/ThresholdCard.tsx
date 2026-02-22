@@ -50,17 +50,21 @@ const getContainerLabel = (container: ContainerId): string => {
     afternoon: 'Afternoon',
     evening: 'Evening',
     late: 'Late',
+    situational: 'Situational',
+    uplift: 'Uplift',
   };
   return labels[container];
 };
 
 // Get time-of-day background color for toast (matching ActionToast)
 const getToastBackground = (container: ContainerId) => {
-  const backgrounds = {
+  const backgrounds: Record<ContainerId, string> = {
     morning: '#D4A574E6',
     afternoon: '#5FA8B8E6',
     evening: '#E8B4A8E6',
     late: '#8B9DC3E6',
+    situational: '#B0B0B0E6',
+    uplift: '#B19CD9E6',
   };
   return backgrounds[container] || backgrounds.morning;
 };
@@ -134,7 +138,7 @@ export const ThresholdCard: React.FC<ThresholdCardProps> = ({
     });
   };
 
-  if (!isVisible && fadeAnim._value === 0) return null;
+  if (!isVisible && (fadeAnim as any)._value === 0) return null;
 
   return (
     <Animated.View

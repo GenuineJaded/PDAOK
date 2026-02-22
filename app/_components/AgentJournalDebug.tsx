@@ -49,7 +49,7 @@ export default function AgentJournalDebug() {
           Agent Journals (Dev)
         </Text>
         <TouchableOpacity onPress={loadJournals} style={styles.refreshButton}>
-          <Text style={[styles.refreshText, { color: colors.primary }]}>
+          <Text style={[styles.refreshText, { color: colors.accent }]}>
             Refresh
           </Text>
         </TouchableOpacity>
@@ -68,8 +68,8 @@ export default function AgentJournalDebug() {
               style={[
                 styles.voiceButton,
                 {
-                  backgroundColor: isSelected ? colors.primary : colors.cardBg,
-                  borderColor: colors.border,
+                  backgroundColor: isSelected ? colors.accent : colors.card,
+                  borderColor: colors.dim,
                 },
               ]}
             >
@@ -84,7 +84,7 @@ export default function AgentJournalDebug() {
               <Text
                 style={[
                   styles.voiceButtonCount,
-                  { color: isSelected ? colors.bg : colors.textSecondary },
+                  { color: isSelected ? colors.bg : colors.dim },
                 ]}
               >
                 {journal.entries.length}
@@ -98,7 +98,7 @@ export default function AgentJournalDebug() {
       <ScrollView style={styles.entriesContainer}>
         {selectedJournal.entries.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyText, { color: colors.dim }]}>
               No journal entries yet for {selectedVoice}
             </Text>
           </View>
@@ -129,7 +129,7 @@ function JournalEntryCard({
   const sentimentColor = {
     light: '#4ade80',
     shadow: '#f87171',
-    neutral: colors.textSecondary,
+    neutral: colors.dim,
   }[entry.sentiment || 'neutral'];
 
   const date = new Date(entry.timestamp);
@@ -143,8 +143,8 @@ function JournalEntryCard({
       style={[
         styles.entryCard,
         {
-          backgroundColor: colors.cardBg,
-          borderColor: entry.promoted ? colors.primary : colors.border,
+          backgroundColor: colors.card,
+          borderColor: entry.promoted ? colors.accent : colors.dim,
           borderWidth: entry.promoted ? 2 : 1,
         },
         isFirst && styles.entryCardFirst,
@@ -154,17 +154,17 @@ function JournalEntryCard({
       <View style={styles.entryHeader}>
         <View style={styles.entryHeaderLeft}>
           <View style={[styles.sentimentDot, { backgroundColor: sentimentColor }]} />
-          <Text style={[styles.entryTime, { color: colors.textSecondary }]}>
+          <Text style={[styles.entryTime, { color: colors.dim }]}>
             {timeStr}
           </Text>
           {entry.context && (
-            <Text style={[styles.entryContext, { color: colors.textSecondary }]}>
+            <Text style={[styles.entryContext, { color: colors.dim }]}>
               • {entry.context}
             </Text>
           )}
         </View>
         {entry.promoted && (
-          <View style={[styles.promotedBadge, { backgroundColor: colors.primary }]}>
+          <View style={[styles.promotedBadge, { backgroundColor: colors.accent }]}>
             <Text style={[styles.promotedText, { color: colors.bg }]}>
               ↑ {entry.promotedTo}
             </Text>
@@ -178,7 +178,7 @@ function JournalEntryCard({
       </Text>
 
       {/* Footer */}
-      <Text style={[styles.eventType, { color: colors.textSecondary }]}>
+      <Text style={[styles.eventType, { color: colors.dim }]}>
         {entry.eventType}
       </Text>
     </View>

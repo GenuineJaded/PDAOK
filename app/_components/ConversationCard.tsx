@@ -84,7 +84,7 @@ export function ConversationCard({ isVisible, messages, colors, onDismiss }: Con
       case 'substance':
         return colors.accent + 'CC'; // Substance in accent color
       case 'archetype':
-        return colors.primary + 'CC'; // Archetype in primary color
+        return (colors.primary || colors.accent) + 'CC'; // Archetype in primary/accent color
       case 'field':
         return colors.dim + 'CC'; // Field in dim color
       default:
@@ -106,7 +106,7 @@ export function ConversationCard({ isVisible, messages, colors, onDismiss }: Con
         style={[
           styles.card,
           {
-            backgroundColor: colors.background + 'F5',
+            backgroundColor: (colors.background || colors.bg) + 'F5',
             borderColor: colors.accent + '30',
           },
         ]}

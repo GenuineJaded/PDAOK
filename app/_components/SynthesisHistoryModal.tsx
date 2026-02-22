@@ -66,7 +66,7 @@ export const SynthesisHistoryModal: React.FC<Props> = ({ visible, onClose, color
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={[styles.modal, { backgroundColor: colors.background }]}>
+        <View style={[styles.modal, { backgroundColor: colors.background || colors.bg }]}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>

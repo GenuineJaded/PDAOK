@@ -13,7 +13,7 @@ interface UltraMicroModalProps {
 
 // Time-of-day color theming for modal background - FULL OPACITY for maximum readability
 const getTimeGlowStyle = (container: ContainerId) => {
-  const glowStyles = {
+  const glowStyles: Record<string, { backgroundColor: string; borderColor: string; textColor: string }> = {
     morning: {
       backgroundColor: 'rgba(212, 165, 116, 1)', // 100% opacity
       borderColor: 'rgba(212, 165, 116, 1)',

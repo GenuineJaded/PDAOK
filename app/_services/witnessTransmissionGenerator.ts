@@ -127,6 +127,7 @@ export async function generateWitnessTransmission(force: boolean = false): Promi
       entityMythicName: WITNESS_CONFIG.entityName, // Witness doesn't have separate mythic name
       message,
       timestamp: new Date(),
+      context: 'witness-pattern-observation',
       patternMetadata: pattern,
     };
     

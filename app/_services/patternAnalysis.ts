@@ -8,12 +8,7 @@ interface PatternData {
   totalTasks: number;
   completedTasks: number;
   completionRate: number;
-  timeOfDayDistribution: {
-    morning: number;
-    afternoon: number;
-    evening: number;
-    late: number;
-  };
+  timeOfDayDistribution: Record<string, number>;
   recentCompletions: number; // Last 7 days
   actionDistribution: {
     completed: number;
@@ -40,7 +35,7 @@ export function analyzePatterns(items: ContainerItem[]): PatternData {
   let completedTasks = 0;
   let recentCompletions = 0;
 
-  const timeOfDayDistribution = {
+  const timeOfDayDistribution: Record<string, number> = {
     morning: 0,
     afternoon: 0,
     evening: 0,

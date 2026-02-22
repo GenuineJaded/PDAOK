@@ -7,6 +7,14 @@ export interface ColorScheme {
   dim: string;
   signal: string;
   card: string;
+  // Extended color properties used by various components
+  primary?: string;
+  background?: string;
+  border?: string;
+  cardBg?: string;
+  textSecondary?: string;
+  cardOverlay?: string;
+  bgGradient?: string;
 }
 
 export interface ContainerItem {
@@ -20,7 +28,18 @@ export interface ContainerItem {
   desire: string;
   createdAt?: string; // ISO timestamp when task was created
   createdTimestamp?: number; // Unix timestamp for easier sorting/filtering
+  // Action tracking fields
+  completed?: boolean;
+  completedAt?: number; // Unix timestamp when completed
+  skipped?: boolean;
+  forgot?: boolean;
+  couldnt?: boolean;
+  notRelevant?: boolean;
+  text?: string; // Display text (falls back to title)
 }
+
+// Legacy alias for backward compatibility
+export type JournalEntry = Moment;
 
 export interface Ally {
   id: string;
@@ -46,7 +65,6 @@ export interface Moment {
   anchorTitle?: string;
   container: ContainerId;
   
-  // Journalistic Synthesis Fields
   // Journalistic Synthesis Fields (The 3-part check-in)
   tone: string; // e.g., "Lighter", "Same", "Spikier"
   frequency: string; // e.g., "Water", "Light", "Movement"
@@ -115,6 +133,12 @@ export interface MovementEntry {
   resistance: string; // Minimal, Noticeable, Overwhelming, Paralyzing
   gainingInertia: string; // What momentum was gathered
   goalposts: string; // Markers and reflections on the path
+  // Extended movement tracking fields
+  type?: string; // Type of movement (e.g., "Walking", "Yoga", "Stretching")
+  duration?: number; // Duration in minutes
+  beforeState?: string; // How you felt before
+  somaticNotes?: string; // Body sensations during
+  afterState?: string; // How you felt after
 }
 
 export interface Dreamseed {
@@ -182,7 +206,7 @@ export interface AppState {
   conversations: Conversation[]; // Substance-archetype dialogues
   fieldWhispers: FieldWhisper[]; // Field pattern observations
   activeContainer: ContainerId;
+  selectedTheme?: string; // Current theme name
   dailyRituals?: DailyRitualState; // Timer checklist state
   activeTimers?: ActiveTimer[]; // Currently running timers
 }
-

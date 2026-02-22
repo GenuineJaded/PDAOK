@@ -26,17 +26,12 @@ interface DayData {
   couldnt: number;
   notRelevant: number;
   total: number;
-  timeOfDayBreakdown: {
-    morning: { completed: number; total: number };
-    afternoon: { completed: number; total: number };
-    evening: { completed: number; total: number };
-    late: { completed: number; total: number };
-  };
+  timeOfDayBreakdown: Record<string, { completed: number; total: number }>;
 }
 
 interface PatternData {
   repeatedSkips: string[]; // Task names skipped multiple days
-  repeatedCoulднts: string[]; // Task names marked "couldn't" multiple days
+  repeatedCouldnts: string[]; // Task names marked "couldn't" multiple days
   strugglingTimeBlock: string | null; // Time block with lowest completion rate
   flowingTimeBlock: string | null; // Time block with highest completion rate
 }
@@ -94,7 +89,7 @@ function analyzeTodayData(items: ContainerItem[]): DayData {
 
   items.forEach(item => {
     // Only count tasks created today or earlier
-    if (item.createdAt && item.createdAt >= todayTimestamp) {
+    if (item.createdAt && new Date(item.createdAt).getTime() >= todayTimestamp) {
       data.total++;
 
       // Count by action
@@ -127,7 +122,7 @@ function detectPatterns(items: ContainerItem[]): PatternData {
   const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
 
   const recentItems = items.filter(item => 
-    item.createdAt && item.createdAt >= sevenDaysAgo
+    item.createdAt && new Date(item.createdAt).getTime() >= sevenDaysAgo
   );
 
   // Track repeated skips/couldn'ts
@@ -142,10 +137,10 @@ function detectPatterns(items: ContainerItem[]): PatternData {
 
   recentItems.forEach(item => {
     if (item.skipped) {
-      skipCounts[item.text] = (skipCounts[item.text] || 0) + 1;
+      skipCounts[item.text || item.title] = (skipCounts[item.text || item.title] || 0) + 1;
     }
     if (item.couldnt) {
-      couldntCounts[item.text] = (couldntCounts[item.text] || 0) + 1;
+      couldntCounts[item.text || item.title] = (couldntCounts[item.text || item.title] || 0) + 1;
     }
 
     // Time block stats

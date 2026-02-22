@@ -21,7 +21,7 @@ import { CraftMomentModal } from '../modal';
 import { Modal } from '../_components/Modal';
 import { Alert } from 'react-native';
 import { ANALYSIS_URL, REQUEST_TIMEOUT_MS, TEST_MODE } from '../_constants/Config';
-import { ContainerId } from '../_constants/Types';
+import { ContainerId, ContainerItem } from '../_constants/Types';
 import { TemporalIntelligenceCard } from '../_components/TemporalIntelligenceCard';
 import { DailySynthesisModal } from '../_modal/DailySynthesisModal';
 import { SynthesisHistoryModal } from '../_components/SynthesisHistoryModal';
@@ -36,9 +36,7 @@ import { RingPulse } from '../_components/RingPulse';
 
 // Conditional imports moved outside the component to fix "Rendered more hooks" error
 import { AllyCard } from '../_components/AllyCard';
-import { JournalEntryCard } from '../_components/JournalEntryCard';
-import { PatternCard } from '../_components/PatternCard';
-import { FoodEntryCard } from '../_components/FoodEntryCard';
+// JournalEntryCard, PatternCard, FoodEntryCard removed - not used in JSX
 import { AddAllyModal, EditAllyModal } from '../modal';
 import { DailyBlockSynthesisModal } from '../_modal/DailyBlockSynthesisModal';
 import { SubstanceSynthesisModal } from '../_modal/SubstanceSynthesisModal';
@@ -75,8 +73,6 @@ type Screen = 'home' | 'substances' | 'archetypes' | 'patterns' | 'nourish' | 't
 export default function HomeScreen() {
   const {
     items,
-    ambientRhythmEnabled,
-    toggleAmbientRhythm,
     allies,
     activeContainer,
     setActiveContainer,
@@ -403,7 +399,7 @@ export default function HomeScreen() {
   // Render Time Container Navigation at bottom with Craft a Moment button
   const renderTimeContainerNav = (showCraftButton: boolean = false) => {
     const containers: ContainerId[] = ['morning', 'afternoon', 'evening', 'late'];
-    const icons = { morning: '🌅', afternoon: '☀️', evening: '🌇', late: '🌙' };
+    const icons: Record<string, string> = { morning: '🌅', afternoon: '☀️', evening: '🌇', late: '🌙' };
     
     return (
       <View>
@@ -920,7 +916,7 @@ export default function HomeScreen() {
           <JournalList
             title="RECENT TRANSMISSIONS"
             entries={transmissions
-              .filter(t => t.entityType === 'substance')
+              .filter(t => t.type === 'substance')
               .map(transmission => ({
                 id: transmission.id,
                 preview: `${transmission.entityMythicName || transmission.entityName}`,
@@ -1983,10 +1979,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
   },
-  date: {
-    fontSize: 14,
-    fontWeight: '400',
-  },
 
 
   foodPortion: {
@@ -2025,10 +2017,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
   analysisBackButton: {
     paddingVertical: 10,
     marginBottom: 20,
@@ -2048,27 +2036,6 @@ const styles = StyleSheet.create({
   analysisText: {
     fontSize: 16,
     lineHeight: 24,
-  },
-  placeholderCard: {
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  placeholderIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  placeholderTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  placeholderText: {
-    fontSize: 14,
-    textAlign: 'left',
-    lineHeight: 20,
   },
   journalSubtitle: {
     fontSize: 14,

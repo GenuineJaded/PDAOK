@@ -10,6 +10,10 @@ const SUBSTANCE_PROFILES: Record<string, {
   essence: string;
   tone: string;
   perspective: string;
+  light?: string;
+  shadow?: string;
+  whisper?: string;
+  ritual?: string;
 }> = {
   cannabis: {
     essence: 'Softening, dissolving boundaries, gentle invitation',

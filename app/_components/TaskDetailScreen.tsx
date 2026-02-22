@@ -26,7 +26,7 @@ const scaleValue = (baseValue: number, scale: number): number => {
 
 // Get time-of-day responsive glow for boxes
 const getTimeGlowStyle = (container: ContainerId) => {
-  const glowStyles = {
+  const glowStyles: Record<string, { backgroundColor: string; borderColor: string; shadowColor: string; labelColor: string }> = {
     morning: {
       backgroundColor: '#D4A57445', // Richer honey/amber tone (was pale #F5E6CC)
       borderColor: '#D4A57480', // Warmer, more saturated border
@@ -89,7 +89,7 @@ export const TaskDetailScreen = ({ item, colors, container, onClose, onComplete,
     'couldn\'t': 'Couldn\'t',
     'not relevant': 'Not Relevant',
   };
-  const actionButtons = allActionButtons.slice(0, item.actionButtons || 4);
+  const actionButtons = allActionButtons.slice(0, (item as any).actionButtons || 4);
   
   // Breathing animation for action buttons
   const breathScale = useRef(new Animated.Value(1)).current;
@@ -583,6 +583,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   actionText: {
     fontSize: 14,

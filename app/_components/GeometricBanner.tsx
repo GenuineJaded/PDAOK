@@ -27,7 +27,7 @@ const SacredGeometryPattern: React.FC<{ color: string; width: number; height: nu
   const smallRadius = radius * 0.5;
   
   // Create 6 circles around center point (hexagonal arrangement)
-  const circles = [];
+  const circles: { cx: number; cy: number }[] = [];
   for (let i = 0; i < 6; i++) {
     const angle = (i * 60) * (Math.PI / 180);
     const cx = centerX + Math.cos(angle) * smallRadius;

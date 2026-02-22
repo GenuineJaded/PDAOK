@@ -17,13 +17,13 @@ interface AppContextType extends AppState {
   addAlly: (ally: Omit<Ally, 'id'>) => void;
   updateAlly: (ally: Ally) => void;
   removeAlly: (id: string) => void;
-  logAllyUse: (allyName: string, details?: Partial<Moment>) => void;
+  logAllyUse: (ally: Ally, details?: Partial<Moment>) => void;
   addMoment: (moment: Omit<Moment, 'id' | 'timestamp' | 'date'>) => void;
   addSubstanceMoment: (moment: Omit<Moment, 'id' | 'timestamp' | 'date'>) => void;
   addPattern: (pattern: Omit<Pattern, 'id' | 'timestamp' | 'date'>) => void;
   removePattern: (id: string) => void;
-  addConversation: (conversation: Omit<import('../constants/Types').Conversation, 'id' | 'timestamp' | 'date'>) => void;
-  addFieldWhisper: (whisper: Omit<import('../constants/Types').FieldWhisper, 'id' | 'timestamp' | 'date'>) => void;
+  addConversation: (conversation: Omit<import('../_constants/Types').Conversation, 'id' | 'timestamp' | 'date'>) => void;
+  addFieldWhisper: (whisper: Omit<import('../_constants/Types').FieldWhisper, 'id' | 'timestamp' | 'date'>) => void;
   addFoodEntry: (entry: Omit<FoodEntry, 'id' | 'timestamp' | 'date'>) => void;
   removeFoodEntry: (id: string) => void;
   updateFoodEntry: (id: string, entry: Partial<FoodEntry>) => void;
@@ -31,8 +31,8 @@ interface AppContextType extends AppState {
   removeMovementEntry: (id: string) => void;
   updateMovementEntry: (id: string, entry: Partial<MovementEntry>) => void;
   addDreamseed: (word: string) => void;
-  addArchetype: (archetype: Omit<import('../constants/Types').Archetype, 'id'>) => void;
-  updateArchetype: (archetype: import('../constants/Types').Archetype) => void;
+  addArchetype: (archetype: Partial<Omit<import('../_constants/Types').Archetype, 'id'>>) => void;
+  updateArchetype: (archetype: import('../_constants/Types').Archetype) => void;
   removeArchetype: (id: string) => void;
   setActiveContainer: (container: ContainerId) => void;
   activeArchetypeId: string | null;
@@ -74,9 +74,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([]);
   const [movementEntries, setMovementEntries] = useState<MovementEntry[]>([]);
-  const [dreamseeds, setDreamseeds] = useState<import('../constants/Types').Dreamseed[]>([]);
-  const [conversations, setConversations] = useState<import('../constants/Types').Conversation[]>([]);
-  const [fieldWhispers, setFieldWhispers] = useState<import('../constants/Types').FieldWhisper[]>([]);
+  const [dreamseeds, setDreamseeds] = useState<import('../_constants/Types').Dreamseed[]>([]);
+  const [conversations, setConversations] = useState<import('../_constants/Types').Conversation[]>([]);
+  const [fieldWhispers, setFieldWhispers] = useState<import('../_constants/Types').FieldWhisper[]>([]);
   const [archetypes, setArchetypes] = useState<Archetype[]>(DEFAULT_ARCHETYPES);
   const [activeContainer, setActiveContainer] = useState<ContainerId>(getCurrentContainer());
   const [activeArchetypeId, setActiveArchetypeId] = useState<string | null>(null);
@@ -150,7 +150,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setItems(normalized.items);
       setAllies(normalized.allies);
-      setSelectedTheme(normalized.selectedTheme || DEFAULT_THEME);
+      setSelectedTheme((normalized.selectedTheme as ThemeName) || DEFAULT_THEME);
       setJournalEntries(normalized.journalEntries);
       setSubstanceJournalEntries(normalized.substanceJournalEntries);
       setCompletions(normalized.completions);
@@ -378,7 +378,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error(`Ally object invalid: ${ally}`);
       return;
     }
-    const moment: Omit<Moment, 'id' | 'timestamp' | 'date'> = {
+    const moment = {
       text: `Used ${ally.name}`,
       container: activeContainer,
       allyId: ally.id,
@@ -387,8 +387,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       tone: details?.tone || '',
       frequency: details?.frequency || '',
       presence: details?.presence || '',
+      context: details?.context || '',
+      action_reflection: details?.action_reflection || '',
+      result_shift: details?.result_shift || '',
+      conclusion_offering: details?.conclusion_offering || '',
       ...details,
-    };
+    } as Omit<Moment, 'id' | 'timestamp' | 'date'>;
     addMoment(moment);
   }, [activeContainer, allies, addMoment]);
 
@@ -404,9 +408,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPatterns(prev => [newPattern, ...prev]);
   }, []);
 
-  const addConversation = useCallback((conversation: Omit<import('../constants/Types').Conversation, 'id' | 'timestamp' | 'date'>) => {
+  const addConversation = useCallback((conversation: Omit<import('../_constants/Types').Conversation, 'id' | 'timestamp' | 'date'>) => {
     const now = new Date();
-    const newConversation: import('../constants/Types').Conversation = {
+    const newConversation: import('../_constants/Types').Conversation = {
       ...conversation,
       id: generateId(),
       date: now.toISOString(),
@@ -415,9 +419,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConversations(prev => [newConversation, ...prev]);
   }, []);
 
-  const addFieldWhisper = useCallback((whisper: Omit<import('../constants/Types').FieldWhisper, 'id' | 'timestamp' | 'date'>) => {
+  const addFieldWhisper = useCallback((whisper: Omit<import('../_constants/Types').FieldWhisper, 'id' | 'timestamp' | 'date'>) => {
     const now = new Date();
-    const newWhisper: import('../constants/Types').FieldWhisper = {
+    const newWhisper: import('../_constants/Types').FieldWhisper = {
       ...whisper,
       id: generateId(),
       date: now.toISOString(),
@@ -443,7 +447,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addDreamseed = useCallback((word: string) => {
     const now = new Date();
-    const newDreamseed: import('../constants/Types').Dreamseed = {
+    const newDreamseed: import('../_constants/Types').Dreamseed = {
       id: generateId(),
       date: now.toISOString(),
       timestamp: now.getTime(),
@@ -479,9 +483,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMovementEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
   }, []);
 
-  const addArchetype = useCallback((archetype: Omit<Archetype, 'id'>) => {
+  const addArchetype = useCallback((archetype: Partial<Omit<Archetype, 'id'>>) => {
     const now = new Date();
     const newArchetype: Archetype = {
+      name: archetype.name || 'New Archetype',
+      subtitle: archetype.subtitle || '',
+      icon: archetype.icon || '🔮',
+      bio: archetype.bio || '',
+      activation_phrase: archetype.activation_phrase || '',
+      body_cue: archetype.body_cue || '',
+      invocation_visualization: archetype.invocation_visualization || '',
+      deactivation_phrase: archetype.deactivation_phrase || '',
+      color_theme: archetype.color_theme || { accent: '#8B5CF6', overlay: 'rgba(139, 92, 246, 0.1)' },
+      theme: archetype.theme,
       ...archetype,
       id: generateId(),
       isDefault: false,
