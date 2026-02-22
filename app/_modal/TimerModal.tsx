@@ -7,18 +7,22 @@ import {
   Modal,
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { isRunningInExpoGo } from 'expo';
 import useColors from '../_hooks/useColors';
 
-// Configure notifications
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Configure notifications only when not in Expo Go
+// (expo-notifications push/schedule features require a development build)
+if (!isRunningInExpoGo()) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 interface DailyCheckItem {
   id: string;
