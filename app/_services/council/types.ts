@@ -65,14 +65,14 @@ export type PetitionTheme =
   | 'return'                // User returned to a pattern
   | 'absence'               // Notable absence of something
   | 'convergence'           // Multiple signals align
-  | 'tension'               // Conflict or imbalance detected
   | 'celebration'           // Something worth acknowledging
-  | 'warning'               // Gentle caution
   | 'integration'           // Time to synthesize
   | 'silence'               // Nothing to say (explicit)
   | 'ritual'                // Ritual-related observation
   | 'embodiment'            // Body/physical observation
-  | 'temporal';             // Time-based observation
+  | 'temporal'              // Time-based observation
+  | 'recognition'           // Acknowledging something seen
+  | 'continuity';           // Thread of ongoing pattern
 
 /**
  * A petition from a voice to the Arbiter
