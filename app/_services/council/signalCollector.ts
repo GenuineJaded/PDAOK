@@ -12,8 +12,7 @@ import { Signal } from './types';
 // STORAGE KEYS (from main app)
 // ============================================================================
 
-const JOURNAL_ENTRIES_KEY = '@pda_journal_entries';
-const ANCHORS_KEY = '@pda_anchors';
+const APP_STATE_KEY = '@pda_app_state';
 const LAST_SIGNAL_CHECK_KEY = '@pda_last_signal_check';
 
 // ============================================================================
@@ -66,10 +65,10 @@ async function collectSubstanceSignals(): Promise<Signal[]> {
   const signals: Signal[] = [];
   
   try {
-    const json = await AsyncStorage.getItem(JOURNAL_ENTRIES_KEY);
+    const json = await AsyncStorage.getItem(APP_STATE_KEY);
     if (!json) return signals;
-    
-    const entries: JournalEntry[] = JSON.parse(json);
+    const state = JSON.parse(json);
+    const entries: JournalEntry[] = state.substanceJournalEntries ?? [];
     const now = new Date();
     const last24h = entries.filter(e => {
       const entryTime = new Date(e.timestamp);
@@ -136,10 +135,18 @@ async function collectAnchorSignals(): Promise<Signal[]> {
   const signals: Signal[] = [];
   
   try {
-    const json = await AsyncStorage.getItem(ANCHORS_KEY);
+    const json = await AsyncStorage.getItem(APP_STATE_KEY);
     if (!json) return signals;
-    
-    const anchors: Anchor[] = JSON.parse(json);
+    const state = JSON.parse(json);
+    const rawItems: Array<{id: string; title: string; container: string}> = state.items ?? [];
+    const rawCompletions: Array<{itemId: string; timestamp: string; container?: string}> = state.completions ?? [];
+    const anchors: Anchor[] = rawItems.map(item => ({
+      id: item.id,
+      name: item.title,
+      completions: rawCompletions
+        .filter(c => c.itemId === item.id)
+        .map(c => ({ timestamp: c.timestamp, timeContainer: c.container || item.container })),
+    }));
     const now = new Date();
     
     for (const anchor of anchors) {
@@ -236,10 +243,10 @@ async function collectPatternSignals(): Promise<Signal[]> {
   const signals: Signal[] = [];
   
   try {
-    const json = await AsyncStorage.getItem(JOURNAL_ENTRIES_KEY);
+    const json = await AsyncStorage.getItem(APP_STATE_KEY);
     if (!json) return signals;
-    
-    const entries: JournalEntry[] = JSON.parse(json);
+    const state = JSON.parse(json);
+    const entries: JournalEntry[] = state.substanceJournalEntries ?? [];
     const now = new Date();
     
     // Get last 7 days of entries
