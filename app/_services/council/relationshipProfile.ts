@@ -56,7 +56,7 @@ export interface RelationshipProfile {
 // ============================================================================
 
 const PROFILE_CACHE_KEY = '@pda_relationship_profiles';
-const JOURNAL_KEY = '@pda_journal_entries';
+const APP_STATE_KEY = '@pda_app_state';
 
 // How long before we recompute a profile (30 minutes)
 const CACHE_TTL_MS = 30 * 60 * 1000;
@@ -87,8 +87,9 @@ export async function computeRelationshipProfile(
   const now = Date.now();
 
   try {
-    const json = await AsyncStorage.getItem(JOURNAL_KEY);
-    const allEntries: JournalEntry[] = json ? JSON.parse(json) : [];
+    const json = await AsyncStorage.getItem(APP_STATE_KEY);
+    const appState = json ? JSON.parse(json) : {};
+    const allEntries: JournalEntry[] = appState.substanceJournalEntries ?? [];
 
     // Filter to entries for this substance (case-insensitive)
     const entries = allEntries.filter(
