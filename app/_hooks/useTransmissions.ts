@@ -58,11 +58,11 @@ export function useTransmissions() {
   }, []);
 
   // Initialize scheduler on mount
-  useEffect(() => {
-    if (!context.loading) {
-      initializeTransmissionScheduler(buildContext);
-    }
-  }, [context.loading, buildContext]);
+  // useEffect(() => {
+  //   if (!context.loading) {
+  //     initializeTransmissionScheduler(buildContext);
+  //   }
+  // }, [context.loading, buildContext]);
 
   // Refresh transmissions periodically
   useEffect(() => {
