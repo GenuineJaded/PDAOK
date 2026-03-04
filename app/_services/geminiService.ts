@@ -7,7 +7,7 @@
 import { EXPO_PUBLIC_GEMINI_API_KEY } from '@env';
 import Constants from 'expo-constants';
 
-const GEMINI_MODEL = 'gemini-2.0-flash-exp';
+const GEMINI_MODEL = 'gemini-2.5-pro';
 const API_TIMEOUT = 10000; // 10 seconds
 
 /**
