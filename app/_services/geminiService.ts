@@ -8,7 +8,7 @@ import { EXPO_PUBLIC_GEMINI_API_KEY } from '@env';
 import Constants from 'expo-constants';
 
 const GEMINI_MODEL = 'gemini-2.5-pro';
-const API_TIMEOUT = 10000; // 10 seconds
+const API_TIMEOUT = 30000; // 30 seconds
 
 /**
  * Clean markdown formatting from AI responses
