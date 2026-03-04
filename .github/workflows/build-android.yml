@@ -4,6 +4,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+eas login
+chronicmic
+Cot9*age
+
 jobs:
   build:
     runs-on: ubuntu-latest
