@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "scheme": "pdaok",
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
@@ -21,7 +22,19 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0f0f23"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "pdaok"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "ios": {
       "supportsTablet": true,
@@ -34,6 +47,22 @@
         "expo-notifications",
         {
           "sounds": []
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "QuickLog",
+              "label": "Quick Log",
+              "minHeight": "180dp",
+              "minWidth": "300dp",
+              "description": "Log Substance, Nourish or Movement directly from your home screen",
+              "previewImage": "./assets/widget-preview/quick-log.png",
+              "resizeMode": "horizontal|vertical"
+            }
+          ]
         }
       ]
     ],
