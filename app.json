@@ -2,7 +2,6 @@
   "expo": {
     "name": "PDA.OK",
     "slug": "pda-ok",
-    "owner": "chronicmic",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,7 +31,10 @@
               "scheme": "pdaok"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -73,7 +75,10 @@
       "router": {},
       "EXPO_PUBLIC_TEST_MODE": "false",
       "EXPO_PUBLIC_ANALYSIS_URL": "",
-      "EXPO_PUBLIC_GEMINI_API_KEY": ""
+      "EXPO_PUBLIC_GEMINI_API_KEY": "",
+      "eas": {
+        "projectId": "8ee41b0c-cac2-4fd3-a68b-dac31cbe0c53"
+      }
     }
   }
 }

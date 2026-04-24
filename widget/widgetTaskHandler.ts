@@ -43,7 +43,7 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
     case 'WIDGET_ADDED':
     case 'WIDGET_UPDATE':
     case 'WIDGET_RESIZED':
-      renderWidget(<QuickLogWidget />);
+      renderWidget(React.createElement(QuickLogWidget));
       break;
 
     // -----------------------------------------------------------------------
@@ -51,7 +51,7 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
     // -----------------------------------------------------------------------
     case 'WIDGET_CLICK': {
       // Re-render so the widget stays fresh
-      renderWidget(<QuickLogWidget />);
+      renderWidget(React.createElement(QuickLogWidget));
 
       // Determine which category was tapped
       const category =
