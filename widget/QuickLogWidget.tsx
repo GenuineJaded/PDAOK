@@ -1,184 +1,157 @@
-/**
- * QuickLogWidget.tsx
- *
- * Android home screen widget for PDAOK-X.
- * Renders three tappable rows — Substance, Nourish, Movement — that each
- * fire a deep-link click action.  Tapping any row opens the app directly
- * into the corresponding quick-log modal, with zero extra navigation.
- *
- * Visual language: dark background (#0f0f23), accent purple (#7c3aed),
- * matching the app's existing aesthetic.
- */
-
 import React from 'react';
-import {
-  FlexWidget,
-  TextWidget,
-  ImageWidget,
-} from 'react-native-android-widget';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 export type QuickLogCategory = 'substance' | 'nourish' | 'movement';
-
-// ---------------------------------------------------------------------------
-// Colour palette (mirrors the app's dark theme)
-// ---------------------------------------------------------------------------
 
 const COLORS = {
   bg: '#0f0f23',
   card: '#1a1a2e',
-  accent: '#7c3aed',
-  accentSoft: '#7c3aed33',
   text: '#e8e8f0',
   dim: '#6b7280',
   border: '#2a2a3e',
-  substanceGreen: '#22c55e',
-  nourishRed: '#ef4444',
-  movementOrange: '#f97316',
+  substance: '#22c55e',
+  nourish: '#ef4444',
+  movement: '#f97316',
 };
 
-// ---------------------------------------------------------------------------
-// Row item definition
-// ---------------------------------------------------------------------------
-
-interface RowItem {
+interface ActionItem {
   id: QuickLogCategory;
   label: string;
-  emoji: string;
+  glyph: string;
   color: string;
 }
 
-const ROWS: RowItem[] = [
-  { id: 'substance', label: 'Substance', emoji: '🌿', color: COLORS.substanceGreen },
-  { id: 'nourish',   label: 'Nourish',   emoji: '🍎', color: COLORS.nourishRed },
-  { id: 'movement',  label: 'Movement',  emoji: '🏃', color: COLORS.movementOrange },
+const ACTIONS: ActionItem[] = [
+  { id: 'substance', label: 'Substance', glyph: 'S', color: COLORS.substance },
+  { id: 'nourish', label: 'Nourish', glyph: 'N', color: COLORS.nourish },
+  { id: 'movement', label: 'Movement', glyph: 'M', color: COLORS.movement },
 ];
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function LogRow({ item }: { item: RowItem }) {
+function ActionButton({ item }: { item: ActionItem }) {
   return (
     <FlexWidget
       clickAction="OPEN_APP"
       clickActionData={{ category: item.id }}
       style={{
-        flexDirection: 'row',
+        flex: 1,
+        flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: COLORS.card,
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        marginBottom: 6,
+        borderRadius: 14,
         borderWidth: 1,
         borderColor: COLORS.border,
+        paddingVertical: 10,
+        paddingHorizontal: 8,
       }}
     >
-      {/* Colour accent strip */}
       <FlexWidget
         style={{
-          width: 3,
-          height: 28,
-          borderRadius: 2,
+          width: 24,
+          height: 24,
+          borderRadius: 12,
           backgroundColor: item.color,
-          marginRight: 12,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 6,
         }}
-      />
+      >
+        <TextWidget
+          text={item.glyph}
+          style={{
+            color: COLORS.bg,
+            fontSize: 12,
+            fontWeight: '700',
+            textAlign: 'center',
+          }}
+        />
+      </FlexWidget>
 
-      {/* Emoji */}
-      <TextWidget
-        text={item.emoji}
-        style={{
-          fontSize: 20,
-          marginRight: 10,
-        }}
-      />
-
-      {/* Label */}
       <TextWidget
         text={item.label}
+        maxLines={1}
         style={{
-          fontSize: 15,
-          fontWeight: '600',
           color: COLORS.text,
-          flex: 1,
-        }}
-      />
-
-      {/* Chevron hint */}
-      <TextWidget
-        text="›"
-        style={{
-          fontSize: 18,
-          color: COLORS.dim,
+          fontSize: 13,
+          fontWeight: '600',
+          textAlign: 'center',
         }}
       />
     </FlexWidget>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main widget
-// ---------------------------------------------------------------------------
-
 export function QuickLogWidget() {
   return (
     <FlexWidget
       style={{
-        flex: 1,
+        width: 'match_parent',
+        height: 'match_parent',
         flexDirection: 'column',
         backgroundColor: COLORS.bg,
-        borderRadius: 16,
-        padding: 12,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        padding: 14,
+        justifyContent: 'center',
       }}
     >
-      {/* Header */}
       <FlexWidget
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          marginBottom: 10,
+          marginBottom: 12,
         }}
       >
-        <TextWidget
-          text="⚡"
-          style={{ fontSize: 16, marginRight: 6 }}
-        />
-        <TextWidget
-          text="Quick Log"
+        <FlexWidget
           style={{
-            fontSize: 14,
-            fontWeight: '700',
-            color: COLORS.text,
-            flex: 1,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: '#f4b942',
+            marginRight: 8,
           }}
         />
+        <FlexWidget style={{ flex: 1 }}>
+          <TextWidget
+            text="Quick Log"
+            style={{
+              color: COLORS.text,
+              fontSize: 16,
+              fontWeight: '700',
+            }}
+          />
+        </FlexWidget>
         <TextWidget
           text="PDA.OK"
           style={{
-            fontSize: 10,
             color: COLORS.dim,
+            fontSize: 10,
+            textAlign: 'right',
           }}
         />
       </FlexWidget>
 
-      {/* Divider */}
       <FlexWidget
         style={{
           height: 1,
           backgroundColor: COLORS.border,
-          marginBottom: 10,
+          marginBottom: 12,
         }}
       />
 
-      {/* Log rows */}
-      {ROWS.map((item) => (
-        <LogRow key={item.id} item={item} />
-      ))}
+      <FlexWidget
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexGap: 8,
+        }}
+      >
+        {ACTIONS.map((item) => (
+          <ActionButton key={item.id} item={item} />
+        ))}
+      </FlexWidget>
     </FlexWidget>
   );
 }

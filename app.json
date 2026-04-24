@@ -58,11 +58,13 @@
             {
               "name": "QuickLog",
               "label": "Quick Log",
-              "minHeight": "180dp",
-              "minWidth": "300dp",
+              "minHeight": "120dp",
+              "minWidth": "320dp",
+              "targetCellWidth": 5,
+              "targetCellHeight": 2,
               "description": "Log Substance, Nourish or Movement directly from your home screen",
               "previewImage": "./assets/widget-preview/quick-log.png",
-              "resizeMode": "horizontal|vertical"
+              "resizeMode": "none"
             }
           ]
         }
