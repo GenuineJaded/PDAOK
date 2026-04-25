@@ -33,10 +33,10 @@ function ActionButton({ item }: { item: ActionItem }) {
       clickAction="OPEN_APP"
       clickActionData={{ category: item.id }}
       style={{
-        flex: 1,
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        width: 88,
         backgroundColor: COLORS.card,
         borderRadius: 14,
         borderWidth: 1,
@@ -98,36 +98,19 @@ export function QuickLogWidget() {
     >
       <FlexWidget
         style={{
-          flexDirection: 'row',
+          width: 'match_parent',
           alignItems: 'center',
+          justifyContent: 'center',
           marginBottom: 12,
         }}
       >
-        <FlexWidget
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: '#f4b942',
-            marginRight: 8,
-          }}
-        />
-        <FlexWidget style={{ flex: 1 }}>
-          <TextWidget
-            text="Quick Log"
-            style={{
-              color: COLORS.text,
-              fontSize: 16,
-              fontWeight: '700',
-            }}
-          />
-        </FlexWidget>
         <TextWidget
-          text="PDA.OK"
+          text="Quip Transmit"
           style={{
-            color: COLORS.dim,
-            fontSize: 10,
-            textAlign: 'right',
+            color: COLORS.text,
+            fontSize: 16,
+            fontWeight: '700',
+            textAlign: 'center',
           }}
         />
       </FlexWidget>
@@ -142,10 +125,10 @@ export function QuickLogWidget() {
 
       <FlexWidget
         style={{
+          width: 'match_parent',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          flexGap: 8,
         }}
       >
         {ACTIONS.map((item) => (
