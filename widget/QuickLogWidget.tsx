@@ -3,64 +3,93 @@ import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 export type QuickLogCategory = 'substance' | 'nourish' | 'movement';
 
+const SCHEME = 'pdaok://quick-log';
+
 const COLORS = {
   bg: '#0f0f23',
-  card: '#1a1a2e',
-  text: '#e8e8f0',
-  dim: '#6b7280',
-  border: '#2a2a3e',
+  panel: '#141428',
+  border: '#26263d',
+  text: '#f2f1f7',
+  dim: '#918fa5',
   substance: '#22c55e',
+  substanceDark: '#0d2c1b',
   nourish: '#ef4444',
+  nourishDark: '#341518',
   movement: '#f97316',
+  movementDark: '#3a1e11',
 };
 
 interface ActionItem {
   id: QuickLogCategory;
   label: string;
   glyph: string;
-  color: string;
+  accent: string;
+  shadow: string;
 }
 
 const ACTIONS: ActionItem[] = [
-  { id: 'substance', label: 'Substance', glyph: 'S', color: COLORS.substance },
-  { id: 'nourish', label: 'Nourish', glyph: 'N', color: COLORS.nourish },
-  { id: 'movement', label: 'Movement', glyph: 'M', color: COLORS.movement },
+  {
+    id: 'substance',
+    label: 'Substance',
+    glyph: 'S',
+    accent: COLORS.substance,
+    shadow: COLORS.substanceDark,
+  },
+  {
+    id: 'nourish',
+    label: 'Nourish',
+    glyph: 'N',
+    accent: COLORS.nourish,
+    shadow: COLORS.nourishDark,
+  },
+  {
+    id: 'movement',
+    label: 'Movement',
+    glyph: 'M',
+    accent: COLORS.movement,
+    shadow: COLORS.movementDark,
+  },
 ];
+
+function getActionUri(category: QuickLogCategory): string {
+  return `${SCHEME}?type=${category}`;
+}
 
 function ActionButton({ item }: { item: ActionItem }) {
   return (
     <FlexWidget
-      clickAction="OPEN_APP"
-      clickActionData={{ category: item.id }}
+      clickAction="OPEN_URI"
+      clickActionData={{ uri: getActionUri(item.id) }}
       style={{
-        flexDirection: 'column',
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        width: 88,
-        backgroundColor: COLORS.card,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        paddingVertical: 10,
-        paddingHorizontal: 8,
+        paddingVertical: 4,
+        paddingHorizontal: 4,
       }}
     >
       <FlexWidget
         style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
-          backgroundColor: item.color,
+          width: 42,
+          height: 42,
+          borderRadius: 21,
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 6,
+          marginBottom: 8,
+          borderWidth: 1,
+          borderColor: item.accent,
+          backgroundGradient: {
+            from: item.accent,
+            to: item.shadow,
+            orientation: 'TL_BR',
+          },
         }}
       >
         <TextWidget
           text={item.glyph}
           style={{
             color: COLORS.bg,
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: '700',
             textAlign: 'center',
           }}
@@ -75,6 +104,20 @@ function ActionButton({ item }: { item: ActionItem }) {
           fontSize: 13,
           fontWeight: '600',
           textAlign: 'center',
+          marginBottom: 6,
+        }}
+      />
+
+      <FlexWidget
+        style={{
+          width: 44,
+          height: 3,
+          borderRadius: 2,
+          backgroundGradient: {
+            from: item.shadow,
+            to: item.accent,
+            orientation: 'LEFT_RIGHT',
+          },
         }}
       />
     </FlexWidget>
@@ -88,20 +131,30 @@ export function QuickLogWidget() {
         width: 'match_parent',
         height: 'match_parent',
         flexDirection: 'column',
-        backgroundColor: COLORS.bg,
+        backgroundGradient: {
+          from: '#101024',
+          to: '#171733',
+          orientation: 'TOP_BOTTOM',
+        },
         borderRadius: 18,
         borderWidth: 1,
         borderColor: COLORS.border,
-        padding: 14,
-        justifyContent: 'center',
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
       }}
     >
       <FlexWidget
+        clickAction="OPEN_URI"
+        clickActionData={{ uri: SCHEME }}
         style={{
           width: 'match_parent',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 12,
+          paddingBottom: 10,
+          marginBottom: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: COLORS.border,
         }}
       >
         <TextWidget
@@ -111,21 +164,15 @@ export function QuickLogWidget() {
             fontSize: 16,
             fontWeight: '700',
             textAlign: 'center',
+            letterSpacing: 0.5,
           }}
         />
       </FlexWidget>
 
       <FlexWidget
         style={{
-          height: 1,
-          backgroundColor: COLORS.border,
-          marginBottom: 12,
-        }}
-      />
-
-      <FlexWidget
-        style={{
           width: 'match_parent',
+          flex: 1,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
