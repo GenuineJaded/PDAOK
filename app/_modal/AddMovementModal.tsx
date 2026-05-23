@@ -22,6 +22,10 @@ interface Props {
     goalposts: string;
   }) => void;
   colors: ColorScheme;
+  /** Optional override for the backdrop (the area around the card).
+   *  When unset, the original semi-transparent dark backdrop is used.
+   *  The widget flow passes a brighter, time-of-day-tinted backdrop. */
+  backdropColor?: string;
 }
 
 const RESISTANCE_LEVELS = [
@@ -31,7 +35,7 @@ const RESISTANCE_LEVELS = [
   'Paralyzing',
 ];
 
-export function AddMovementModal({ isVisible, onClose, onAdd, colors }: Props) {
+export function AddMovementModal({ isVisible, onClose, onAdd, colors, backdropColor }: Props) {
   const [time] = useState(new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
   const [act, setAct] = useState('');
   const [resistance, setResistance] = useState('');
@@ -73,7 +77,7 @@ export function AddMovementModal({ isVisible, onClose, onAdd, colors }: Props) {
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, backdropColor ? { backgroundColor: backdropColor } : null]}
       >
         <View style={[styles.modalContent, { backgroundColor: colors.bg }]}>
           {/* Header with X button */}

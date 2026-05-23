@@ -7,6 +7,7 @@ import { useApp } from '../_context/AppContext';
 import useColors from '../_hooks/useColors';
 import { generateSubstanceVoice } from '../_services/substanceVoice';
 import { generateArchetypeToSubstance, generateSubstanceToArchetype } from '../_services/archetypeDialogue';
+import { getWidgetBackdrop } from '../_constants/WidgetBackdrops';
 
 interface Props {
   isVisible: boolean;
@@ -183,7 +184,7 @@ export const QuickSubstanceSynthesisModal = ({ isVisible, onClose, container, ac
       visible={isVisible}
       onRequestClose={onClose}
     >
-      <View style={[styles.centeredView, { backgroundColor: colors.bg + 'CC' }]}>
+      <View style={[styles.centeredView, { backgroundColor: getWidgetBackdrop(container) }]}>
         <View style={[styles.modalView, { backgroundColor: colors.card }]}>
           {/* Title row — title left, close button right, matching the other widget modals */}
           <View style={styles.titleRow}>

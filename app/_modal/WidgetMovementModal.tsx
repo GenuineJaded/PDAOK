@@ -12,6 +12,7 @@ import { useApp } from '../_context/AppContext';
 import useColors from '../_hooks/useColors';
 import { AddMovementModal } from './AddMovementModal';
 import { getCurrentContainer } from '../_utils/time';
+import { getWidgetBackdrop } from '../_constants/WidgetBackdrops';
 
 interface Props {
   isVisible: boolean;
@@ -21,10 +22,12 @@ interface Props {
 export function WidgetMovementModal({ isVisible, onClose }: Props) {
   const { addMovementEntry, selectedTheme } = useApp();
   // Honor the current time container so the modal carries the field's signature
-  // (Morning oranges, Afternoon blues, Evening purples, Late midnight tones)
-  // instead of falling through to the dead system fallback.
   const container = getCurrentContainer();
   const colors = useColors(container, true, undefined, undefined, selectedTheme);
+  // The widget interaction is a quick, light moment — the backdrop behind the
+  // card brightens to the time-of-day signature so it feels like opening into
+  // a brighter space, not falling into the app's normal dark restraint.
+  const backdropColor = getWidgetBackdrop(container);
 
   return (
     <AddMovementModal
@@ -35,6 +38,7 @@ export function WidgetMovementModal({ isVisible, onClose }: Props) {
         onClose();
       }}
       colors={colors}
+      backdropColor={backdropColor}
     />
   );
 }
