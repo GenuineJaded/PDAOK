@@ -41,13 +41,30 @@ SplashScreen.preventAutoHideAsync();
 type QuickLogCategory = 'substance' | 'nourish' | 'movement' | 'picker';
 
 /**
- * Parse a pdaok://quick-log?type=<category> URL and return the category,
- * or null if the URL is not a quick-log deep link.
+ * Parse a quick-log deep link and return the category, or null if it isn't one.
+ *
+ * Accepts three URL shapes for resilience:
+ *   1. pdaok://?action=quick-log&type=<category>   (current — no hostname,
+ *      so Expo Router has nothing to try to route to)
+ *   2. pdaok://quick-log?type=<category>           (legacy — older widgets
+ *      still installed on devices may emit this)
+ *   3. pdaok://quicklog?type=<category>            (defensive — in case
+ *      Android ever normalizes the hyphen out)
  */
 function parseQuickLogDeepLink(url: string): QuickLogCategory | null {
   try {
     const parsed = new URL(url);
-    if (parsed.hostname !== 'quick-log') return null;
+
+    const action = parsed.searchParams.get('action');
+    const hostname = parsed.hostname;
+
+    const isQuickLog =
+      action === 'quick-log' ||
+      hostname === 'quick-log' ||
+      hostname === 'quicklog';
+
+    if (!isQuickLog) return null;
+
     const type = parsed.searchParams.get('type');
     if (type === 'substance' || type === 'nourish' || type === 'movement') {
       return type;

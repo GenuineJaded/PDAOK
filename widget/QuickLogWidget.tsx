@@ -124,10 +124,16 @@ function currentContainer(): ContainerKey {
 // Deep-link URI — caught by _layout.tsx's Linking handler
 // ---------------------------------------------------------------------------
 
-const SCHEME = 'pdaok://quick-log';
+// We deliberately use the bare scheme (no hostname) with a query string,
+// instead of pdaok://quick-log?type=X. Expo Router treats the hostname of a
+// pdaok:// URL as a potential route name, which races with our own deep-link
+// listener and was producing intermittent "page not found" screens on the
+// second-and-later taps of the widget. With no hostname, the router has
+// nothing to match, and our handler in _layout.tsx is the only consumer.
+const SCHEME = 'pdaok://';
 
 function getActionUri(category: QuickLogCategory): string {
-  return `${SCHEME}?type=${category}`;
+  return `${SCHEME}?action=quick-log&type=${category}`;
 }
 
 // ---------------------------------------------------------------------------
