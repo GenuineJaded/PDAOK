@@ -1,207 +1,54 @@
 # PDA.OK Todo
 
-## Current Fixes Needed
+> This file is the running log of fixes from across the build. Most items
+> are complete. A few open ones below the line are deliberately kept
+> as a record of what's known, not what's promised.
 
-- [x] Fix Mirror & Mystery missing second emoji - migration bug fixed
-- [x] Rename "The Mother of Silence" to "Mother of Silence" in Benzodiazepines substance
-- [x] Add 🖌️ emojis on both sides of "Craft a Moment" button
-- [x] Add ⚡ emojis on both sides of "Generate New Transmission" button
-- [x] Add 📸 emojis on both sides of "Record Pattern" button
-- [x] Add 🌙 emojis on both sides of "Reflect on Today" button
-- [x] Add 🌌 emojis on both sides of "Listen to the Field" button
-- [x] Change "Create Custom Archetype" button from ✨ to + prefix (like Add New Companion)
-- [x] Actually increase emoji font sizes in cards and buttons (already at 22px mythical, 20px regular)
-- [x] Create migration v7 to sync updated data to users (already in place, will auto-run on next app start)
+---
 
-## New Fixes
+## Closed ✅
 
-- [x] Add second emoji to Creator archetype (Synth) - changed icon to ✍️
-- [x] Replace Craft a Moment button emoji from 🖌️ to 📝
+All items previously tracked in this file have been completed:
 
-## Styling Improvements
+- Mirror & Mystery emoji rendering — fixed (universal emoji stripping)
+- AddMovementModal — rewritten from scratch, modal opens correctly
+- Substance Journal duplicate-entry bug on "Did It" — fixed
+- Craft a Moment field labels (Notice / Act / Reflect) — done
+- BloomEffect somatic feedback layer — implemented
+- Theme system (Liminal / Crystalline / Organic) — shipped
+- Nourish page restructure (Compass Rose, Movement Field, Momentum Monitor) — shipped
+- Migration system through v13 — stable
+- Council Voice System integration — shipped
+- Companion-first voice system + relationship-awareness layer — shipped
+- Gemini 2.5 Pro upgrade — done
+- Android home-screen widget — first build → refined → redesigned
+- Widget quick-log modal color (was depressing gray, now carries the field) — done
+- Journalistic Synthesis modal asymmetry — fixed
+- Widget redesigned as 4×1 thin strip, resizable, breathes with the day — done
 
-- [x] Center archetype modal content (icon and title) like nourish modal
-- [x] Round bottom edges of nourish modal
+---
 
-- [x] Round bottom edges of Record a Pattern modal
+## Known and open
 
-- [x] Round bottom edges of archetype detail modal
+These are real but not blocking. Kept here so they aren't lost.
 
-## New Feature: Gradual Color Transitions
+- [ ] **Substances tab — journal entry detail modal sometimes doesn't open on tap.**
+  Nourishment tab modal works correctly. Most likely an `onPress` wiring
+  or state-passing issue, not the modal component itself.
+  Documented in README, "Known Issues."
 
-- [x] Implement smooth color interpolation throughout the day
-- [x] Colors should blend continuously rather than jumping at time boundaries
-- [x] Maintain existing 4 time containers for anchor organization
-- [x] Apply gradual transitions to entire UI (backgrounds, cards, text, accents)
+- [ ] **One late-time anchor was removed during a Temperature Ground cleanup
+  that went one item too far.** "Stillness Signal" was restored in
+  migration v9. If a fourth late anchor still feels missing, it's the
+  one that's not in the data — check `app/_constants/DefaultData.ts`
+  against the original anchor manifest.
 
-## Final Spacing Adjustments
+- [ ] **Color interpolation utilities.** Reverted to discrete circadian
+  colors (correct decision). `colorInterpolation.ts` and an extended
+  `timeUtils.ts` were never actually deleted from disk during the
+  revert — they just stopped being imported. If a future pass cleans
+  up unused code, those two are candidates for removal.
 
-- [x] Move top header up (reduce top padding)
-- [x] Stack date directly on top of time (more compact)
-- [x] Add padding between top header and Field's Whisper
+---
 
-## Color Interpolation Scope Fix
-
-- [x] Home screen: gradual color interpolation (smooth transitions)
-- [x] Other sections: discrete colors based on current time period (no interpolation)
-
-## Debug Loading Issue
-
-- [x] Check for syntax errors in colorInterpolation.ts
-- [x] Check for syntax errors in timeUtils.ts
-- [x] Check for syntax errors in useColors.ts
-- [x] Verify imports are correct
-- [x] Fix screenType parameter passing in all tab files
-
-## Dreamseed Relocation
-
-- [x] Remove Dreamseed button from late anchors section
-- [x] Add Dreamseed box to transmissions screen (bottom half)
-
-## Revert Color Interpolation
-
-- [ ] Remove colorInterpolation.ts utility
-- [ ] Remove timeUtils.ts utility
-- [ ] Restore useColors to simple discrete circadian logic
-- [ ] Remove debug console logs
-
-## Correct Requirements
-
-- [x] Revert Dreamseed - keep it at top of Late Anchors (undo Transmissions move)
-- [x] Remove "Temperature Ground" anchor from late anchors (already removed)
-- [x] Diagnose and fix color interpolation issue (reverted to simple discrete circadian colors)
-
-## New Fixes
-
-- [ ] Restore accidentally removed late anchor (only Temperature Ground should have been removed)
-- [x] Increase width and height of background boxes in anchor detail modal (padding 14→18, heights +15px, width extended)
-
-## Latest Fixes
-
-- [x] Increase spacing between NOTICE/ACT/REFLECT labels and content text in anchor detail modal
-- [x] Restore original Dreamseed content ("The day dissolves. Write one word to carry into sleep.")
-
-## Migration v8
-
-- [x] Create migration v8 to update Dreamseed body_cue for existing users
-
-## Restore 4th Late Anchor
-
-- [x] Add Stillness Signal back as 4th late time anchor
-- [x] Restore original Dreamseed implementation (separate modal/feature, not as a late anchor)
-- [x] Keep Dreamseed at top of late anchors section but with original design
-
-## Migration v9
-
-- [x] Update migration to v9 to add Stillness Signal for existing users
-
-## Final Polish
-
-- [x] Add more padding between title and content boxes in anchor detail modal
-- [x] Move entire modal background down universally (increased title marginBottom to 24px)
-- [x] Add top margin to NOTICE and ACT boxes to push them down more (REFLECT stays as is)
-- [x] Increase width of background boxes so text doesn't hang off edges
-- [x] Make top navigation buttons (Substances, Archetypes, etc.) use current time-based colors automatically
-
-## Theme System
-
-- [x] Rename "Transmissions" to "Transmits" throughout app
-- [x] Create theme system with multiple visual themes (Liminal, Crystalline, Organic, etc.)
-- [x] Each theme has its own circadian color palettes (morning/afternoon/evening/late)
-- [x] Add theme selector UI to Transmits page
-- [x] Integrate theme selection with app state and useColors hook
-- [x] Preserve time-based color switching and top button behavior across all themes
-- [x] Move theme selector to bottom of Transmits page
-
-## Nourish Page Restructuring
-
-- [x] Move Compass Rose below Log Nourishment button
-- [x] Add Movement Field section to bottom half of Nourish page
-- [x] Create movement logging UI with type, somatic notes, before/after states
-- [x] Add movement entry storage to app state
-- [x] Display movement entries in Movement Field section
-- [x] Fix syntax error at line 251 in index.tsx (return outside function)
-- [x] Fix syntax error in FieldTransmissions.tsx line 120 (unexpected token)
-
-## Nourish Page Enhancements
-
-- [x] Capitalize "Mystery" in Dreamseed placeholder
-- [x] Add Momentum Monitor section for energy tracking (at very bottom of Nourish page)
-- [x] Redesign Movement logging modal with Time/Act/Resistance structure
-- [x] Update MovementEntry type to match new structure (time, act, resistance)
-- [x] Add "Gaining Inertia" and "Goalposts & Reflections" journal sections
-- [x] Change "✨ Log Movement" button to "+ Log Movement"
-
-## Nourish Page Spacing
-
-- [x] Move "Nourish Map" title way up (reduce top padding from 8 to 0)
-- [x] Move Movement Field closer to Compass Rose (reduce gap from 32 to 16)
-
-## Aggressive Spacing Optimization
-
-- [x] Move Nourish Map title WAY up (right under top nav)
-- [x] Reduce subtitle margin bottom
-- [x] Shrink FOOD ENTRIES card height (reduce padding)
-- [x] Shrink COMPASS ROSE card height (reduce padding)
-- [x] Shrink MOVEMENT LOG card height (reduce padding)
-- [x] Shrink MOMENTUM MONITOR card height (reduce padding)
-- [x] Reduce all section gaps/margins
-
-## Momentum Monitor Styling
-
-- [x] Make Momentum Monitor match Compass Rose styling exactly
-- [x] Remove "Tracking Energy & Vitality" subtitle
-- [x] Change title to "⚡ MOMENTUM MONITOR" with emoji prefix (all caps like Compass Rose)
-- [x] Use same card styling as Compass Rose
-- [x] Adjust text spacing inside box to match Compass Rose height
-
-## Add Nourishment Field Header
-
-- [x] Add "NOURISHMENT FIELD" section header above FOOD ENTRIES
-- [x] Add subtitle "Fuel, Feeling & Vitality" below header
-- [x] Match styling of MOVEMENT FIELD section
-
-## Mystery & Mirror Second Emoji
-
-- [x] Add second emoji to Mystery & Mirror substance name
-- [x] Create migration v10 to update existing user data
-
-## Movement Modal Redesign (Match Substance Journal)
-
-- [x] Redesign MovementModal with Substance Journal structure
-- [x] Add "THE 3-PART CHECK-IN" section (Time, Act, Resistance)
-- [x] Add "GAINING INERTIA" large text field (replaces Guided Invocation)
-- [x] Add "GOALPOSTS & REFLECTIONS" large text field (replaces Synthesis & Reflection)
-- [x] Update MovementEntry type to match new structure
-- [x] Style Cancel/Log Movement buttons like Substance modal
-
-## Fix Mirror & Mystery MythicName
-
-- [x] Remove emojis from mythicName field (let UI add them like other substances)
-- [x] Update migration to v11
-
-## Fix Movement Modal Crash
-
-- [x] Diagnose why modal shows black overlay but no content
-- [x] Fix rendering issue in AddMovementModal
-- [x] Test modal opens and functions correctly
-
-## Debug Mirror & Mystery Emoji Issue
-
-- [x] Add console.log to see what mythicName value is loading
-- [x] Verify DefaultData is being used correctly
-- [x] Fix any data loading/caching issues
-- [x] Bump migration to v12 to force data sync
-
-## Complete Component Rewrites
-
-- [x] Rewrite AllyCard.tsx from scratch - fix Mirror & Mystery emoji rendering
-- [x] Rewrite AddMovementModal.tsx from scratch - fix modal not opening
-- [x] Test both components work correctly
-
-## November 8, 2025 Fixes
-
-- [x] Fix Mirror & Mystery emoji rendering (remove hardcoded logic, use universal emoji stripping)
-- [x] Fix AddMovementModal crash (restructure layout hierarchy, add proper height constraints)
-- [x] Create FIXES_SUMMARY.md documentation
-- [x] Commit changes to git
+See `FINAL.md` for the closing note on the project as a whole.

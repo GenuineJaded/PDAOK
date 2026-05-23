@@ -2,6 +2,9 @@
 
 > They do not speak to be heard. They speak so the silence has structure.
 
+> **Project status:** closed and signed. See [`FINAL.md`](./FINAL.md) for the
+> closing note. Open items (none blocking) are in [`todo.md`](./todo.md).
+
 **PDA.OK** (Personal Data Almanac) is a React Native/Expo app that acts as a **prosthetic nervous system**—a living digital extension of your embodied experience. It tracks relationships with substances, time, and embodiment through a poetic, grounded framework, using autonomous AI voices to reflect patterns back to the user.
 
 ---
