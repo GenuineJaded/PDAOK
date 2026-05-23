@@ -22,9 +22,13 @@ interface AddFoodModalProps {
     energy_level?: string;
   }) => void;
   colors: ColorScheme;
+  /** Optional override for the backdrop (the area around the card).
+   *  When unset, the original semi-transparent dark backdrop is used.
+   *  The widget flow passes a brighter, time-of-day-tinted backdrop. */
+  backdropColor?: string;
 }
 
-export function AddFoodModal({ isVisible, onClose, onSave, colors }: AddFoodModalProps) {
+export function AddFoodModal({ isVisible, onClose, onSave, colors, backdropColor }: AddFoodModalProps) {
   const [time] = useState(new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
   const [name, setName] = useState('');
   const [feeling, setFeeling] = useState('');
@@ -69,7 +73,7 @@ export function AddFoodModal({ isVisible, onClose, onSave, colors }: AddFoodModa
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, backdropColor ? { backgroundColor: backdropColor } : null]}
       >
         <View style={[styles.modalContent, { backgroundColor: colors.bg }]}>
           <View style={styles.header}>

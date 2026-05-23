@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import useColors from '../_hooks/useColors';
 import { useApp } from '../_context/AppContext';
 import { getCurrentContainer } from '../_utils/time';
+import { getWidgetBackdrop } from '../_constants/WidgetBackdrops';
 
 interface QuickLogModalProps {
   isVisible: boolean;
@@ -22,6 +23,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
   const { selectedTheme } = useApp();
   const container = getCurrentContainer();
   const colors = useColors(container, true, undefined, undefined, selectedTheme);
+  const backdropColor = getWidgetBackdrop(container);
   
   if (!isVisible) {
     return null;
@@ -41,7 +43,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
       onRequestClose={onClose}
     >
       <TouchableOpacity
-        style={styles.overlay}
+        style={[styles.overlay, { backgroundColor: backdropColor }]}
         activeOpacity={1}
         onPress={onClose}
       >
