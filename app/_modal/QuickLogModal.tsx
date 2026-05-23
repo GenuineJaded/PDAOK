@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import useColors from '../_hooks/useColors';
+import { useApp } from '../_context/AppContext';
+import { getCurrentContainer } from '../_utils/time';
 
 interface QuickLogModalProps {
   isVisible: boolean;
@@ -17,7 +19,9 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
   onClose,
   onSelectCategory,
 }) => {
-  const colors = useColors();
+  const { selectedTheme } = useApp();
+  const container = getCurrentContainer();
+  const colors = useColors(container, true, undefined, undefined, selectedTheme);
   
   if (!isVisible) {
     return null;

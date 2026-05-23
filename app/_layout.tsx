@@ -25,6 +25,7 @@ import { QuickLogModal } from './_modal/QuickLogModal';
 import { QuickSubstanceSynthesisModal } from './_modal/QuickSubstanceSynthesisModal';
 import { WidgetFoodModal } from './_modal/WidgetFoodModal';
 import { WidgetMovementModal } from './_modal/WidgetMovementModal';
+import { getCurrentContainer } from './_utils/time';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -184,11 +185,14 @@ export default function RootLayout() {
               }}
             />
 
-            {/* Step 2a: Substance quick-log */}
+            {/* Step 2a: Substance quick-log
+                Pass the current time container so the modal carries the field's
+                signature color (Morning / Afternoon / Evening / Late) instead of
+                falling through to the dead default. */}
             <QuickSubstanceSynthesisModal
               isVisible={isQuickSubstanceVisible}
               onClose={() => setIsQuickSubstanceVisible(false)}
-              container={undefined as any}
+              container={getCurrentContainer()}
               activeArchetype={undefined}
             />
 

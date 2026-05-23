@@ -29,8 +29,7 @@ const QUICK_SUBSTANCES = [
  * for quick logging from the home screen
  */
 export const QuickSubstanceSynthesisModal = ({ isVisible, onClose, container, activeArchetype }: Props) => {
-  const colors = useColors(container);
-  const { 
+  const {
     addSubstanceMoment,
     addConversation,
     conversations,
@@ -38,7 +37,11 @@ export const QuickSubstanceSynthesisModal = ({ isVisible, onClose, container, ac
     journalEntries,
     substanceJournalEntries,
     allies,
+    selectedTheme,
   } = useApp();
+  // Honor the chosen theme + time container so this modal carries the field's
+  // signature color, matching the rest of the widget quick-log surface.
+  const colors = useColors(container, true, undefined, undefined, selectedTheme);
 
   const [selectedSubstanceId, setSelectedSubstanceId] = useState<string>('');
   const [synthesisState, setSynthesisState] = useState({
@@ -182,35 +185,40 @@ export const QuickSubstanceSynthesisModal = ({ isVisible, onClose, container, ac
     >
       <View style={[styles.centeredView, { backgroundColor: colors.bg + 'CC' }]}>
         <View style={[styles.modalView, { backgroundColor: colors.card }]}>
-          {/* Header with title and substance selector */}
-          <View style={styles.headerRow}>
+          {/* Title row — title left, close button right, matching the other widget modals */}
+          <View style={styles.titleRow}>
             <View style={styles.titleSection}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Journalistic Synthesis</Text>
               <Text style={[styles.modalSubtitle, { color: colors.dim }]}>
                 Reflect on the Moment.
               </Text>
             </View>
-            
-            {/* Substance Selector - Top Right */}
-            <View style={styles.substanceSelectorContainer}>
-              <View style={[styles.substanceSelector, { backgroundColor: colors.bg, borderColor: colors.accent }]}>
-                <Picker
-                  selectedValue={selectedSubstanceId}
-                  onValueChange={(value) => setSelectedSubstanceId(value)}
-                  style={[styles.substancePicker, { color: colors.text }]}
-                  dropdownIconColor={colors.accent}
-                >
-                  <Picker.Item label="Select..." value="" />
-                  {QUICK_SUBSTANCES.map((substance) => (
-                    <Picker.Item 
-                      key={substance.id}
-                      label={`${substance.emoji} ${substance.mythicName}`}
-                      value={substance.id}
-                    />
-                  ))}
-                </Picker>
-              </View>
-            </View>
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeButton}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Text style={[styles.closeButtonText, { color: colors.accent }]}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Substance selector — its own full-width row, no more competing with the title */}
+          <View style={[styles.substanceSelector, { backgroundColor: colors.bg, borderColor: colors.accent }]}>
+            <Picker
+              selectedValue={selectedSubstanceId}
+              onValueChange={(value) => setSelectedSubstanceId(value)}
+              style={[styles.substancePicker, { color: colors.text }]}
+              dropdownIconColor={colors.accent}
+            >
+              <Picker.Item label="Select an ally…" value="" />
+              {QUICK_SUBSTANCES.map((substance) => (
+                <Picker.Item
+                  key={substance.id}
+                  label={`${substance.emoji} ${substance.mythicName}`}
+                  value={substance.id}
+                />
+              ))}
+            </Picker>
           </View>
 
           {/* Selected substance indicator */}
@@ -331,14 +339,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  headerRow: {
+  titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   titleSection: {
     flex: 1,
+    paddingRight: 12,
   },
   modalTitle: {
     fontSize: 22,
@@ -348,16 +357,24 @@ const styles = StyleSheet.create({
   modalSubtitle: {
     fontSize: 14,
   },
-  substanceSelectorContainer: {
-    marginLeft: 12,
+  closeButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 22,
+    fontWeight: '400',
+    lineHeight: 24,
   },
   substanceSelector: {
     borderRadius: 12,
     borderWidth: 2,
     overflow: 'hidden',
-    minWidth: 160,
     minHeight: 52,
     justifyContent: 'center',
+    marginBottom: 16,
   },
   substancePicker: {
     height: 52,
