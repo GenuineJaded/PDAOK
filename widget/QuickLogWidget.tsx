@@ -1,61 +1,146 @@
+/**
+ * QuickLogWidget.tsx
+ *
+ * A thin 4x1 home-screen widget — three breathing buttons across one row:
+ *   Substance · Nourish · Movement
+ *
+ * No header. No wasted vertical space. Each button is its own tap target,
+ * each fires a deep link that the root layout intercepts to open the
+ * matching quick-log modal directly (no tab navigation in between).
+ *
+ * The widget surface honors the current time container the same way the
+ * app does — Morning warmth, Afternoon clarity, Evening sunset, Late
+ * midnight — so the prosthetic feels alive even when it isn't tapped.
+ *
+ * Palette mirrors the Liminal theme (the app's default). The widget
+ * re-renders on the system's normal update cycle, so the color shifts
+ * naturally through the day without needing the app to be open.
+ */
+
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 export type QuickLogCategory = 'substance' | 'nourish' | 'movement';
 
-const SCHEME = 'pdaok://quick-log';
+type ContainerKey = 'morning' | 'afternoon' | 'evening' | 'late';
 
-const COLORS = {
-  bg: '#0f0f23',
-  panel: '#141428',
-  border: '#26263d',
-  text: '#f2f1f7',
-  dim: '#918fa5',
-  substance: '#22c55e',
-  substanceDark: '#0d2c1b',
-  nourish: '#ef4444',
-  nourishDark: '#341518',
-  movement: '#f97316',
-  movementDark: '#3a1e11',
+interface FieldPalette {
+  surface: string;       // widget background
+  surfaceEdge: string;   // gradient end
+  border: string;
+  text: string;
+  dim: string;
+}
+
+// ---------------------------------------------------------------------------
+// Field palettes — mirror app/_constants/Themes.ts (Liminal, the default)
+// ---------------------------------------------------------------------------
+
+const FIELD: Record<ContainerKey, FieldPalette> = {
+  morning: {
+    surface: '#3A342C',
+    surfaceEdge: '#4A3F35',
+    border: '#5A4D40',
+    text: '#F0E5D8',
+    dim: '#C4A57B',
+  },
+  afternoon: {
+    surface: '#2C3840',
+    surfaceEdge: '#3A4550',
+    border: '#455560',
+    text: '#E8F0F5',
+    dim: '#8FA8B8',
+  },
+  evening: {
+    surface: '#333333',
+    surfaceEdge: '#4D3A30',
+    border: '#5A4438',
+    text: '#F0E5D8',
+    dim: '#B87333',
+  },
+  late: {
+    surface: '#1A1A1A',
+    surfaceEdge: '#242438',
+    border: '#2A2A3E',
+    text: '#F0F0F0',
+    dim: '#A9B8A6',
+  },
 };
+
+// ---------------------------------------------------------------------------
+// Category accents — each ally keeps its identity across all containers,
+// but the surrounding field shifts.
+// ---------------------------------------------------------------------------
 
 interface ActionItem {
   id: QuickLogCategory;
   label: string;
   glyph: string;
   accent: string;
-  shadow: string;
+  accentDark: string;
 }
 
 const ACTIONS: ActionItem[] = [
   {
     id: 'substance',
     label: 'Substance',
-    glyph: 'S',
-    accent: COLORS.substance,
-    shadow: COLORS.substanceDark,
+    glyph: '🌿',
+    accent: '#5FA274',
+    accentDark: '#1F3A28',
   },
   {
     id: 'nourish',
     label: 'Nourish',
-    glyph: 'N',
-    accent: COLORS.nourish,
-    shadow: COLORS.nourishDark,
+    glyph: '🍎',
+    accent: '#C26A6A',
+    accentDark: '#3A1F1F',
   },
   {
     id: 'movement',
     label: 'Movement',
-    glyph: 'M',
-    accent: COLORS.movement,
-    shadow: COLORS.movementDark,
+    glyph: '🏃',
+    accent: '#D4884A',
+    accentDark: '#3A2418',
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Time-of-day → container key (mirrors app/_utils/time.ts)
+// ---------------------------------------------------------------------------
+
+function currentContainer(): ContainerKey {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  if (hour >= 17 && hour < 22) return 'evening';
+  return 'late';
+}
+
+// ---------------------------------------------------------------------------
+// Deep-link URI — caught by _layout.tsx's Linking handler
+// ---------------------------------------------------------------------------
+
+const SCHEME = 'pdaok://quick-log';
 
 function getActionUri(category: QuickLogCategory): string {
   return `${SCHEME}?type=${category}`;
 }
 
-function ActionButton({ item }: { item: ActionItem }) {
+// ---------------------------------------------------------------------------
+// One breathing button — glyph circle + label
+// ---------------------------------------------------------------------------
+
+function ActionButton({
+  item,
+  field,
+}: {
+  item: ActionItem;
+  field: FieldPalette;
+}) {
   return (
     <FlexWidget
       clickAction="OPEN_URI"
@@ -64,23 +149,22 @@ function ActionButton({ item }: { item: ActionItem }) {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 4,
+        paddingVertical: 6,
         paddingHorizontal: 4,
       }}
     >
       <FlexWidget
         style={{
-          width: 42,
-          height: 42,
-          borderRadius: 21,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 8,
           borderWidth: 1,
           borderColor: item.accent,
           backgroundGradient: {
             from: item.accent,
-            to: item.shadow,
+            to: item.accentDark,
             orientation: 'TL_BR',
           },
         }}
@@ -88,9 +172,7 @@ function ActionButton({ item }: { item: ActionItem }) {
         <TextWidget
           text={item.glyph}
           style={{
-            color: COLORS.bg,
-            fontSize: 16,
-            fontWeight: '700',
+            fontSize: 20,
             textAlign: 'center',
           }}
         />
@@ -100,88 +182,47 @@ function ActionButton({ item }: { item: ActionItem }) {
         text={item.label}
         maxLines={1}
         style={{
-          color: COLORS.text,
-          fontSize: 13,
+          color: field.text,
+          fontSize: 12,
           fontWeight: '600',
           textAlign: 'center',
-          marginBottom: 6,
-        }}
-      />
-
-      <FlexWidget
-        style={{
-          width: 44,
-          height: 3,
-          borderRadius: 2,
-          backgroundGradient: {
-            from: item.shadow,
-            to: item.accent,
-            orientation: 'LEFT_RIGHT',
-          },
+          marginTop: 6,
         }}
       />
     </FlexWidget>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Widget surface — three buttons in a single row, no header
+// ---------------------------------------------------------------------------
+
 export function QuickLogWidget() {
+  const field = FIELD[currentContainer()];
+
   return (
     <FlexWidget
       style={{
         width: 'match_parent',
         height: 'match_parent',
-        flexDirection: 'column',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundGradient: {
-          from: '#101024',
-          to: '#171733',
+          from: field.surface,
+          to: field.surfaceEdge,
           orientation: 'TOP_BOTTOM',
         },
-        borderRadius: 18,
+        borderRadius: 20,
         borderWidth: 1,
-        borderColor: COLORS.border,
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 12,
+        borderColor: field.border,
+        paddingHorizontal: 8,
+        paddingVertical: 8,
       }}
     >
-      <FlexWidget
-        clickAction="OPEN_URI"
-        clickActionData={{ uri: SCHEME }}
-        style={{
-          width: 'match_parent',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingBottom: 10,
-          marginBottom: 10,
-          borderBottomWidth: 1,
-          borderBottomColor: COLORS.border,
-        }}
-      >
-        <TextWidget
-          text="Quip Transmit"
-          style={{
-            color: COLORS.text,
-            fontSize: 16,
-            fontWeight: '700',
-            textAlign: 'center',
-            letterSpacing: 0.5,
-          }}
-        />
-      </FlexWidget>
-
-      <FlexWidget
-        style={{
-          width: 'match_parent',
-          flex: 1,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        {ACTIONS.map((item) => (
-          <ActionButton key={item.id} item={item} />
-        ))}
-      </FlexWidget>
+      {ACTIONS.map((item) => (
+        <ActionButton key={item.id} item={item} field={field} />
+      ))}
     </FlexWidget>
   );
 }

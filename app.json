@@ -57,14 +57,14 @@
           "widgets": [
             {
               "name": "QuickLog",
-              "label": "Quick Log",
-              "minHeight": "120dp",
-              "minWidth": "320dp",
-              "targetCellWidth": 5,
-              "targetCellHeight": 2,
-              "description": "Log Substance, Nourish or Movement directly from your home screen",
+              "label": "Quip",
+              "minHeight": "60dp",
+              "minWidth": "250dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 1,
+              "description": "A quip to the field — log Substance, Nourish, or Movement from the home screen.",
               "previewImage": "./assets/widget-preview/quick-log.png",
-              "resizeMode": "none"
+              "resizeMode": "horizontal|vertical"
             }
           ]
         }

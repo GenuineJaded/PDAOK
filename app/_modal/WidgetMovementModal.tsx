@@ -11,6 +11,7 @@ import React from 'react';
 import { useApp } from '../_context/AppContext';
 import useColors from '../_hooks/useColors';
 import { AddMovementModal } from './AddMovementModal';
+import { getCurrentContainer } from '../_utils/time';
 
 interface Props {
   isVisible: boolean;
@@ -18,8 +19,12 @@ interface Props {
 }
 
 export function WidgetMovementModal({ isVisible, onClose }: Props) {
-  const { addMovementEntry } = useApp();
-  const colors = useColors();
+  const { addMovementEntry, selectedTheme } = useApp();
+  // Honor the current time container so the modal carries the field's signature
+  // (Morning oranges, Afternoon blues, Evening purples, Late midnight tones)
+  // instead of falling through to the dead system fallback.
+  const container = getCurrentContainer();
+  const colors = useColors(container, true, undefined, undefined, selectedTheme);
 
   return (
     <AddMovementModal
