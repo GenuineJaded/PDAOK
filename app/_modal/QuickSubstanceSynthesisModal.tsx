@@ -304,17 +304,17 @@ export const QuickSubstanceSynthesisModal = ({ isVisible, onClose, container, ac
 
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton, { backgroundColor: colors.dim }]}
+              style={[styles.button, styles.cancelButton, { backgroundColor: colors.card }]}
               onPress={onClose}
             >
-              <Text style={[styles.buttonText, { color: colors.card }]}>Cancel</Text>
+              <Text style={[styles.buttonText, { color: colors.text }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.saveButton, { backgroundColor: selectedSubstance ? colors.accent : colors.dim }]}
               onPress={handleSave}
               disabled={!selectedSubstance}
             >
-              <Text style={[styles.buttonText, { color: colors.card }]}>Synthesize Moment</Text>
+              <Text style={[styles.buttonText, { color: colors.card }]}>Synthesize</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -465,14 +465,13 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginTop: 20,
     gap: 12,
   },
   button: {
     flex: 1,
-    padding: 14,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
   },
   cancelButton: {},
