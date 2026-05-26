@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { AppState, ContainerItem, Ally, Moment, Completion, ContainerId, Pattern, FoodEntry, MovementEntry, Archetype, DailyCheckItem, ActiveTimer, DailyRitualState } from '../_constants/Types';
 import { JournalEntry } from '../_constants/Types'; // Keep JournalEntry for backward compatibility if needed, but Moment is the new primary type
 import { DEFAULT_ALLIES, DEFAULT_GROUNDING_ITEMS, DEFAULT_ARCHETYPES } from '../_constants/DefaultData';
@@ -49,6 +49,9 @@ interface AppContextType extends AppState {
   toggleDailyCheckItem: (id: string) => void;
   startTimer: (minutes: number, label: string) => Promise<void>;
   cancelTimer: (id: string) => Promise<void>;
+  // Persist the latest state immediately, bypassing the debounced auto-save.
+  // Used before the app is backgrounded so an in-flight entry isn't lost.
+  flushPendingWrites: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -211,6 +214,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       activeTimers,
     });
   }, [items, allies, journalEntries, substanceJournalEntries, completions, patterns, foodEntries, movementEntries, dreamseeds, conversations, fieldWhispers, archetypes, activeContainer, selectedTheme, dailyChecklist, lastChecklistResetDate, activeTimers]);
+
+  // Keep a ref to the freshest saveData so an imperative flush always writes
+  // the latest state, even when called right after a state update (before the
+  // debounced effect would have fired). Assigned during render so it is in
+  // sync before any child effect runs.
+  const saveDataRef = useRef(saveData);
+  saveDataRef.current = saveData;
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
+
+  const flushPendingWrites = useCallback(async () => {
+    // Mirror the auto-save guard: never persist before the initial load has
+    // populated state, or we'd overwrite saved data with defaults.
+    if (loadingRef.current) return;
+    await saveDataRef.current();
+  }, []);
 
   const addItem = useCallback((item: Omit<ContainerItem, 'id'>) => {
     const now = new Date();
@@ -673,6 +692,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toggleDailyCheckItem,
     startTimer,
     cancelTimer,
+    flushPendingWrites,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
