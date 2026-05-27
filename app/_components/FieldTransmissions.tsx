@@ -15,6 +15,7 @@ import {
 import { useTransmissions } from '../_hooks/useTransmissions';
 import { useApp } from '../_context/AppContext';
 import { THEMES, ThemeName } from '../_constants/Themes';
+import AIConnectionCard from './AIConnectionCard';
 
 export default function FieldTransmissions() {
   const { transmissions, unreadCount, loading, markRead, forceCheck, refresh } = useTransmissions();
@@ -142,6 +143,9 @@ export default function FieldTransmissions() {
             ))}
           </View>
         </View>
+
+        {/* AI Connection (bring-your-own-key) */}
+        <AIConnectionCard />
       </ScrollView>    </View>
   );
 }

@@ -1,4 +1,4 @@
-import { AppProvider } from './_context/AppContext';
+import { AppProvider, useApp } from './_context/AppContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import * as Font from 'expo-font';
@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { OleoScript_700Bold } from '@expo-google-fonts/oleo-script';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { Linking, LogBox } from 'react-native';
+import { BackHandler, Linking, LogBox, Platform } from 'react-native';
 
 // Suppress non-critical warnings that clutter the screen
 LogBox.ignoreLogs([
@@ -77,54 +77,117 @@ function parseQuickLogDeepLink(url: string): QuickLogCategory | null {
 }
 
 // ---------------------------------------------------------------------------
+// Widget quick-log host
+//
+// Owns the quick-log modals surfaced by the home-screen widget. Lives inside
+// AppProvider so it can flush pending writes before the app is backgrounded.
+//
+// Two behaviors that matter when these are launched from the widget:
+//   1. Only ONE quick-log modal is ever open. A single `active` value (instead
+//      of independent booleans) means repeated widget taps replace the current
+//      modal rather than stacking a pile of them inside the app.
+//   2. Dismissing a modal (cancel OR save) returns the user to the home screen
+//      on Android, so they aren't stranded inside the app after a quick log.
+//      We flush pending writes first so a just-submitted entry survives the
+//      activity finishing (the auto-save is otherwise debounced).
+// ---------------------------------------------------------------------------
+
+function WidgetQuickLogHost() {
+  const { flushPendingWrites } = useApp();
+  const [active, setActive] = useState<QuickLogCategory | null>(null);
+
+  // True while the picker hands off to a specific category — distinguishes a
+  // selection (don't return home) from a real dismissal of the picker.
+  const transitioning = useRef(false);
+  // True when the current close should return the user to the launcher.
+  const returnHome = useRef(false);
+
+  // ---- Deep links (cold-start + foreground). This host only mounts once the
+  // app is ready, so getInitialURL covers the cold-start case directly. ----
+  useEffect(() => {
+    Linking.getInitialURL().then((url) => {
+      if (!url) return;
+      const category = parseQuickLogDeepLink(url);
+      if (category) setActive(category);
+    });
+
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      const category = parseQuickLogDeepLink(url);
+      if (category) setActive(category);
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  // ---- After a dismissal commits, flush writes and background the app ----
+  useEffect(() => {
+    if (active === null && returnHome.current) {
+      returnHome.current = false;
+      (async () => {
+        await flushPendingWrites();
+        if (Platform.OS === 'android') {
+          BackHandler.exitApp();
+        }
+      })();
+    }
+  }, [active, flushPendingWrites]);
+
+  const dismiss = useCallback(() => {
+    returnHome.current = true;
+    setActive(null);
+  }, []);
+
+  // The picker calls onSelectCategory then its own onClose. Mark the handoff so
+  // that trailing onClose neither returns home nor clears the new category.
+  const handlePickerClose = useCallback(() => {
+    if (transitioning.current) {
+      transitioning.current = false;
+      return;
+    }
+    dismiss();
+  }, [dismiss]);
+
+  const handleSelectCategory = useCallback((category: QuickLogCategory) => {
+    transitioning.current = true;
+    setActive(category);
+  }, []);
+
+  return (
+    <>
+      {/* Step 1: Category picker (shown when widget tap has no specific type) */}
+      <QuickLogModal
+        isVisible={active === 'picker'}
+        onClose={handlePickerClose}
+        onSelectCategory={handleSelectCategory}
+      />
+
+      {/* Step 2a: Substance quick-log
+          Pass the current time container so the modal carries the field's
+          signature color (Morning / Afternoon / Evening / Late) instead of
+          falling through to the dead default. */}
+      <QuickSubstanceSynthesisModal
+        isVisible={active === 'substance'}
+        onClose={dismiss}
+        container={getCurrentContainer()}
+        activeArchetype={undefined}
+      />
+
+      {/* Step 2b: Nourish / food log */}
+      <WidgetFoodModal isVisible={active === 'nourish'} onClose={dismiss} />
+
+      {/* Step 2c: Movement log */}
+      <WidgetMovementModal isVisible={active === 'movement'} onClose={dismiss} />
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Root layout
 // ---------------------------------------------------------------------------
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [appIsReady, setAppIsReady] = useState(false);
-
-  // ---- Widget quick-log modal state ----
-  const [isQuickLogPickerVisible, setIsQuickLogPickerVisible] = useState(false);
-  const [isQuickSubstanceVisible, setIsQuickSubstanceVisible] = useState(false);
-  const [isAddFoodVisible, setIsAddFoodVisible] = useState(false);
-  const [isAddMovementVisible, setIsAddMovementVisible] = useState(false);
-
-  // Pending category to open once the app is ready (cold-start case)
-  const pendingCategory = useRef<QuickLogCategory | null>(null);
-
-  // ---- Open the correct modal for a given category ----
-  const openQuickLogCategory = useCallback(
-    (category: QuickLogCategory) => {
-      if (category === 'substance') {
-        setIsQuickSubstanceVisible(true);
-      } else if (category === 'nourish') {
-        setIsAddFoodVisible(true);
-      } else if (category === 'movement') {
-        setIsAddMovementVisible(true);
-      } else {
-        // 'picker' — show the category chooser
-        setIsQuickLogPickerVisible(true);
-      }
-    },
-    []
-  );
-
-  // ---- Handle an incoming deep-link URL ----
-  const handleDeepLink = useCallback(
-    (url: string) => {
-      const category = parseQuickLogDeepLink(url);
-      if (!category) return;
-
-      if (!appIsReady) {
-        // App is still loading; queue the action
-        pendingCategory.current = category;
-      } else {
-        openQuickLogCategory(category);
-      }
-    },
-    [appIsReady, openQuickLogCategory]
-  );
 
   // ---- Font loading ----
   useEffect(() => {
@@ -141,29 +204,6 @@ export default function RootLayout() {
     }
     prepare();
   }, []);
-
-  // ---- Process any pending deep link once the app is ready ----
-  useEffect(() => {
-    if (appIsReady && pendingCategory.current) {
-      openQuickLogCategory(pendingCategory.current);
-      pendingCategory.current = null;
-    }
-  }, [appIsReady, openQuickLogCategory]);
-
-  // ---- Subscribe to deep links (foreground + cold-start) ----
-  useEffect(() => {
-    // Cold-start: app was not running when the widget was tapped
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink(url);
-    });
-
-    // Foreground: app was already running
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      handleDeepLink(url);
-    });
-
-    return () => subscription.remove();
-  }, [handleDeepLink]);
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
@@ -186,44 +226,10 @@ export default function RootLayout() {
             </Stack>
             <StatusBar style="auto" />
 
-            {/* ----------------------------------------------------------------
-                Widget quick-log modals
-                These live at the root layout level so they are always available
-                regardless of which tab or screen is currently active.
-            ---------------------------------------------------------------- */}
-
-            {/* Step 1: Category picker (shown when widget tap has no specific type) */}
-            <QuickLogModal
-              isVisible={isQuickLogPickerVisible}
-              onClose={() => setIsQuickLogPickerVisible(false)}
-              onSelectCategory={(category) => {
-                setIsQuickLogPickerVisible(false);
-                openQuickLogCategory(category);
-              }}
-            />
-
-            {/* Step 2a: Substance quick-log
-                Pass the current time container so the modal carries the field's
-                signature color (Morning / Afternoon / Evening / Late) instead of
-                falling through to the dead default. */}
-            <QuickSubstanceSynthesisModal
-              isVisible={isQuickSubstanceVisible}
-              onClose={() => setIsQuickSubstanceVisible(false)}
-              container={getCurrentContainer()}
-              activeArchetype={undefined}
-            />
-
-            {/* Step 2b: Nourish / food log */}
-            <WidgetFoodModal
-              isVisible={isAddFoodVisible}
-              onClose={() => setIsAddFoodVisible(false)}
-            />
-
-            {/* Step 2c: Movement log */}
-            <WidgetMovementModal
-              isVisible={isAddMovementVisible}
-              onClose={() => setIsAddMovementVisible(false)}
-            />
+            {/* Quick-log modals surfaced by the Android home-screen widget.
+                Kept at the root so they are available regardless of the active
+                tab, and inside AppProvider so they can persist before exit. */}
+            <WidgetQuickLogHost />
           </ErrorBoundary>
         </ThemeProvider>
       </AppProvider>
