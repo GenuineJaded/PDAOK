@@ -10,7 +10,7 @@ interface Props {
   colors: ColorScheme;
 }
 
-export const AllyCard = React.memo(({ ally, onEdit, onRemove, onLogUse, colors }: Props) => {
+export const AllyCard = React.memo(function AllyCard({ ally, onEdit, onRemove, onLogUse, colors }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const handleLongPress = () => {
@@ -92,7 +92,7 @@ export const AllyCard = React.memo(({ ally, onEdit, onRemove, onLogUse, colors }
       {expanded && (
         <View style={styles.details}>
           <Text style={[styles.invocation, { color: colors.accent, fontStyle: 'italic' }]}>
-            "{ally.invocation}"
+            &quot;{ally.invocation}&quot;
           </Text>
 
           <View style={styles.section}>

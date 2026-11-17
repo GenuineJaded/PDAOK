@@ -184,7 +184,7 @@ export const CouncilToast: React.FC<CouncilToastProps> = ({
         {/* Whisper hint */}
         {voiceIdentity?.whisper && (
           <Text style={[styles.whisper, { color: colors.text + '40' }]}>
-            "{voiceIdentity.whisper.substring(0, 40)}..."
+            &quot;{voiceIdentity.whisper.substring(0, 40)}...&quot;
           </Text>
         )}
       </TouchableOpacity>

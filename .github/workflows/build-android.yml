@@ -1,40 +1,87 @@
-name: Build Android APK
+name: Android checks and APK
+
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
-eas login
-chronicmic
-Cot9*age
+permissions:
+  contents: read
 
 jobs:
-  build:
+  validate:
+    name: Validate Android app
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Check out source
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
+          cache: npm
 
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: npm ci
 
-      - name: Build APK with EAS
-        run: npx eas-cli build --platform android --non-interactive --wait
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Check Expo package compatibility
+        run: npx expo install --check
 
-      - name: Download built APK
+      - name: Check types
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Validate Android native configuration
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Bundle Android app
+        run: npx expo export --platform android --max-workers 2 --output-dir dist
+
+  build:
+    name: Build installable APK
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Check Expo access is configured
+        shell: bash
         run: |
-          BUILD_URL=$(npx eas-cli build:list --platform android --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
-          curl -L -o app-release.apk "$BUILD_URL"
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add an EXPO_TOKEN repository secret for an account with access to the existing PDA.OK Expo project. See PRODUCTION_DEPLOYMENT.md."
+            exit 1
+          fi
 
-      - name: Upload APK
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build preview APK with existing Expo project
+        run: npx --yes eas-cli@27.10.0 build --platform android --profile preview --non-interactive --wait --json > eas-build.json
+
+      - name: Download this build's APK
+        shell: bash
+        run: |
+          APK_URL=$(node -e 'const fs = require("node:fs"); const result = JSON.parse(fs.readFileSync("eas-build.json", "utf8")); const build = Array.isArray(result) ? result[0] : result; const url = build.artifacts?.applicationArchiveUrl || build.artifacts?.buildUrl; if (build.status !== "FINISHED" || !url) throw new Error("This build did not produce a finished APK"); console.log(url);')
+          curl --fail --location --retry 3 --output PDA.OK.apk "$APK_URL"
+
+      - name: Upload finished APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: app-release.apk
+          name: PDA.OK-android-apk
+          path: PDA.OK.apk
+          if-no-files-found: error

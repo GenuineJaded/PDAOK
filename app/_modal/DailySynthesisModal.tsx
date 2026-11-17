@@ -61,7 +61,7 @@ export const DailySynthesisModal = ({ visible, onClose, colors }: Props) => {
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.accent} />
               <Text style={[styles.loadingText, { color: colors.dim }]}>
-                Weaving the day's threads...
+                Weaving the day&apos;s threads...
               </Text>
             </View>
           ) : synthesis ? (

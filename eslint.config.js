@@ -7,4 +7,12 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    files: ['load_time_anchors.js', 'populate_anchors.js'],
+    languageOptions: {
+      globals: {
+        __dirname: 'readonly',
+      },
+    },
+  },
 ]);

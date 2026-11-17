@@ -9,7 +9,7 @@ interface Props {
   onViewHistory?: () => void;
 }
 
-export const DailySynthesisCard = React.memo(({ colors, onViewHistory }: Props) => {
+export const DailySynthesisCard = React.memo(function DailySynthesisCard({ colors, onViewHistory }: Props) {
   const { items } = useApp();
   const [synthesis, setSynthesis] = useState<DailySynthesis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +80,7 @@ export const DailySynthesisCard = React.memo(({ colors, onViewHistory }: Props) 
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={colors.accent} />
           <Text style={[styles.loadingText, { color: colors.dim }]}>
-            Weaving the day's threads...
+            Weaving the day&apos;s threads...
           </Text>
         </View>
       ) : hasGenerated && synthesis ? (

@@ -41,7 +41,7 @@ export function ArchetypeDetailModal({
               <Text style={styles.icon}>{archetype.icon}</Text>
               <View style={styles.titleContainer}>
                 <Text style={[styles.name, { color: colors.text }]}>{archetype.name}</Text>
-                <Text style={[styles.subtitle, { color: colors.dim }]}>"{archetype.subtitle}"</Text>
+                <Text style={[styles.subtitle, { color: colors.dim }]}>&quot;{archetype.subtitle}&quot;</Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -64,7 +64,7 @@ export function ArchetypeDetailModal({
             <View style={[styles.section, styles.highlightSection, { backgroundColor: colors.accent + '15' }]}>
               <Text style={[styles.sectionTitle, { color: colors.accent }]}>Activation Phrase</Text>
               <Text style={[styles.activationText, { color: colors.text }]}>
-                "{archetype.activation_phrase}"
+                &quot;{archetype.activation_phrase}&quot;
               </Text>
             </View>
 
@@ -84,7 +84,7 @@ export function ArchetypeDetailModal({
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.accent }]}>Deactivation Phrase</Text>
               <Text style={[styles.bodyText, { color: colors.dim, fontStyle: 'italic' }]}>
-                "{archetype.deactivation_phrase}"
+                &quot;{archetype.deactivation_phrase}&quot;
               </Text>
             </View>
 

@@ -10,13 +10,13 @@ interface Props {
   defaultExpanded?: boolean;
 }
 
-export const CollapsibleSection = React.memo(({ 
+export const CollapsibleSection = React.memo(function CollapsibleSection({
   title, 
   icon, 
   children, 
   colors,
   defaultExpanded = false 
-}: Props) => {
+}: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (

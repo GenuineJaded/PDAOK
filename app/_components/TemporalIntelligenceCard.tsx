@@ -11,7 +11,7 @@ interface Props {
 
 const DEFAULT_MESSAGE = "The system is listening. As patterns emerge, I will offer a quiet observation here.";
 
-export const TemporalIntelligenceCard = React.memo(({ colors }: Props) => {
+export const TemporalIntelligenceCard = React.memo(function TemporalIntelligenceCard({ colors }: Props) {
   const { items } = useApp();
   const [message, setMessage] = useState<string>(DEFAULT_MESSAGE);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +55,7 @@ export const TemporalIntelligenceCard = React.memo(({ colors }: Props) => {
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.dim }]}>
       <Text style={[styles.title, { color: colors.dim }]}>
-        THE FIELD'S WHISPER
+        THE FIELD&apos;S WHISPER
       </Text>
       
       {isLoading ? (

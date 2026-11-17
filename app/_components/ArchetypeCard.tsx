@@ -47,7 +47,7 @@ export function ArchetypeCard({ archetype, onPress, onEdit, onDelete, colors, is
             <Text style={[styles.name, { color: colors.text }]}>
               {archetype.icon} {archetype.name} {archetype.icon}
             </Text>
-            <Text style={[styles.subtitle, { color: colors.dim }]}>"{archetype.subtitle}"</Text>
+            <Text style={[styles.subtitle, { color: colors.dim }]}>&quot;{archetype.subtitle}&quot;</Text>
           </View>
         </View>
         <Text style={[styles.bio, { color: colors.text }]} numberOfLines={2}>

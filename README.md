@@ -2,8 +2,10 @@
 
 > They do not speak to be heard. They speak so the silence has structure.
 
-> **Project status:** closed and signed. See [`FINAL.md`](./FINAL.md) for the
-> closing note. Open items (none blocking) are in [`todo.md`](./todo.md).
+> **Android build checkpoint (November 17, 2026):** see
+> [`PRODUCTION_DEPLOYMENT.md`](./PRODUCTION_DEPLOYMENT.md) for APK builds,
+> Expo account requirements, and phone checks. [`FINAL.md`](./FINAL.md)
+> preserves the earlier closing note; [`todo.md`](./todo.md) records known issues.
 
 **PDA.OK** (Personal Data Almanac) is a React Native/Expo app that acts as a **prosthetic nervous system**—a living digital extension of your embodied experience. It tracks relationships with substances, time, and embodiment through a poetic, grounded framework, using autonomous AI voices to reflect patterns back to the user.
 
@@ -40,7 +42,7 @@ The core of PDA.OK is a council of seven autonomous AI voices, each tied to a sp
 Each voice is a self-contained system with three parts:
 1.  **Pattern Engine:** Substance-specific logic to detect patterns (e.g., clustering, frequency shifts, anchor correlation).
 2.  **Voice Profile:** A distinct personality, tone, and set of transmission modes (e.g., Gentle Caution, Mythic Question).
-3.  **Transmission Generator:** Uses Gemini to generate poetic, non-judgmental reflections based on detected patterns.
+3.  **Transmission Generator:** Uses the provider and model selected in AI Connection to generate poetic, non-judgmental reflections based on detected patterns.
 
 ### Resonance Gating
 To prevent chatter and ensure transmissions are meaningful, each voice adheres to strict guardrails:
@@ -59,19 +61,19 @@ To prevent chatter and ensure transmissions are meaningful, each voice adheres t
 - **AsyncStorage** for local data persistence
 - **Expo Router** for file-based navigation
 - **React Navigation** for tab-based UI
-- **Gemini API** for AI-powered transmission generation
+- **OpenRouter or OpenAI** for AI-powered transmissions, using a key entered in the app's AI Connection panel. Without a key, local logging remains available.
 
 ### Key Directories
 ```
 app/
 ├── (tabs)/              # Main tab screens (index, journal, substances)
-├── components/          # Reusable UI components (AllyCard, AnchorCard, etc.)
-├── constants/           # DefaultData, Types, Colors, Themes
-├── context/             # AppContext (global state management)
-├── hooks/               # useColors, useTransmissions
-├── modal/               # Modal components (AddMovementModal, etc.)
-├── services/            # AI voice engines, pattern analysis, transmission scheduler
-├── utils/               # storage, migration, time utilities
+├── _components/         # Reusable UI components (AllyCard, AnchorCard, etc.)
+├── _constants/          # DefaultData, Types, Colors, Themes
+├── _context/            # AppContext (global state management)
+├── _hooks/              # useColors, useTransmissions, useCouncil
+├── _modal/              # Modal components (AddMovementModal, etc.)
+├── _services/           # AI clients, Council, pattern analysis, schedulers
+├── _utils/              # storage, migration, time utilities
 └── _layout.tsx          # Root layout with font loading
 ```
 
@@ -82,54 +84,56 @@ app/
 - **Transmissions** - AI-generated messages from the seven voices
 
 ### State Management
-- **AppContext** (`app/context/AppContext.tsx`) - Single source of truth for all user data.
+- **AppContext** (`app/_context/AppContext.tsx`) - Single source of truth for all user data.
 - **AsyncStorage** - Persists the entire app state to the `@pda_app_state` key.
-- **Migration System** - Version-based data migrations to handle schema changes gracefully (currently v13).
+- **Migration System** - Version-based data migrations to handle schema changes gracefully (currently v15).
 
 ---
 
 ## 🚀 Development Setup
 
 ### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Expo Go app on your phone
+- Node.js 22 LTS (also used by GitHub Actions)
+- npm (use the committed package lock)
+- An Android phone for testing the APK; the native Quip widget requires a custom build
 - Git
 
 ### Installation
 ```bash
-git clone https://github.com/BrayneSnax/PDA.OK.git
-cd PDA.OK
-npm install
+git clone https://github.com/GenuineJaded/PDAOK.git
+cd PDAOK
+npm ci
 ```
 
 ### Running the App
 
-**1. LAN (Recommended)**
+**1. Standalone Android APK**
 ```bash
-npx expo start --lan
+npx eas-cli@27.10.0 build --platform android --profile preview
 ```
-- **Pros:** Faster, more reliable, avoids most cache issues.
-- **Cons:** Requires PC and phone on the same WiFi network.
+- Requires access to the existing Expo project and its Android signing credentials.
+- Install the finished APK from its Expo build page. It runs without a computer or Metro server.
+- See [`PRODUCTION_DEPLOYMENT.md`](./PRODUCTION_DEPLOYMENT.md) for account setup and testing.
 
-**2. Tunnel (When LAN is unavailable)**
-```bash
-npx expo start --tunnel
-```
-- **Pros:** Works across different networks.
-- **Cons:** Slower, aggressive caching can prevent new code from loading.
-
-**3. Local Android Build (Bypass Expo Go)**
+**2. Local Android development build**
 ```bash
 npx expo run:android
 ```
-- **Pros:** Builds a local APK, bypassing all Expo Go cache issues.
-- **Cons:** Requires Android Studio setup.
+- Requires Android Studio, an Android SDK, and a compatible JDK.
+- Generates native Android files and starts the development server.
 
-### Development Tips
-- **Clear cache:** `npx expo start -c`
-- **Force quit Expo Go** after pulling new code.
-- **Use LAN whenever possible** to avoid tunnel-related cache problems.
+**3. Check the source before building**
+```bash
+npx expo install --check
+npm run typecheck
+npm run lint
+npx expo export --platform android --output-dir dist
+```
+
+Expo Go cannot load the custom Android widget module registered by `index.ts`.
+Use a native build to test this app. JavaScript-only edits need a new preview
+APK when testing a standalone installation; live development uses the local
+Android build and Metro instead.
 
 ---
 
@@ -140,13 +144,14 @@ npx expo run:android
 - `git pull` succeeds, but the app shows old behavior.
 - Console logs from new code do not appear.
 
-**Root Cause:** Expo Go's aggressive caching, especially with the `--tunnel` option.
+**Possible causes:** the installed APK was built from older source, Metro is
+serving cached JavaScript during development, or native dependencies changed.
 
 **Solutions:**
-1.  **Switch to LAN:** `npx expo start --lan` is the most reliable fix.
-2.  **Clear Cache:** Stop the server and run `npx expo start -c`.
-3.  **Reinstall Expo Go:** Uninstall and reinstall the Expo Go app on your phone (nuclear option).
-4.  **Local Build:** Use `npx expo run:android` to bypass Expo Go entirely.
+1.  Confirm which Expo build produced the installed APK.
+2.  During local development, restart Metro with `npx expo start -c`.
+3.  Rebuild the native app after package or native configuration changes.
+4.  Preserve the existing installation and signing identity when keeping journal data; uninstalling is not a cache-clearing step.
 
 ### Issue: Journal Entry Modal Not Opening on Tap
 **Symptoms:**

@@ -50,7 +50,7 @@ const getGlowFieldStyle = (container: ContainerId | undefined, colors: ColorSche
   };
 };
 
-export const AnchorCard = React.memo(({ item, completed, onToggle, colors, onPress, onDelete, onEdit, container, aligned }: Props) => {
+export const AnchorCard = React.memo(function AnchorCard({ item, completed, onToggle, colors, onPress, onDelete, onEdit, container, aligned }: Props) {
   const opacity = useSharedValue(1);
   const [showMenu, setShowMenu] = useState(false);
 

@@ -19,6 +19,7 @@
 
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
+import type { ColorProp } from 'react-native-android-widget';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,11 +30,11 @@ export type QuickLogCategory = 'substance' | 'nourish' | 'movement';
 type ContainerKey = 'morning' | 'afternoon' | 'evening' | 'late';
 
 interface FieldPalette {
-  surface: string;       // widget background
-  surfaceEdge: string;   // gradient end
-  border: string;
-  text: string;
-  dim: string;
+  surface: ColorProp;       // widget background
+  surfaceEdge: ColorProp;   // gradient end
+  border: ColorProp;
+  text: ColorProp;
+  dim: ColorProp;
 }
 
 // ---------------------------------------------------------------------------
@@ -80,8 +81,8 @@ interface ActionItem {
   id: QuickLogCategory;
   label: string;
   glyph: string;
-  accent: string;
-  accentDark: string;
+  accent: ColorProp;
+  accentDark: ColorProp;
 }
 
 const ACTIONS: ActionItem[] = [

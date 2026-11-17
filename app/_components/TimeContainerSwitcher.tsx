@@ -15,7 +15,7 @@ const CONTAINERS: { id: ContainerId; label: string }[] = [
   { id: 'late', label: 'Late Night' },
 ];
 
-export const TimeContainerSwitcher = React.memo(({ active, onSelect, colors }: Props) => {
+export const TimeContainerSwitcher = React.memo(function TimeContainerSwitcher({ active, onSelect, colors }: Props) {
   return (
     <View style={styles.container}>
       {CONTAINERS.map(container => {

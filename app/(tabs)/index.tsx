@@ -1061,11 +1061,11 @@ export default function HomeScreen() {
             <Text style={[styles.infoText, { color: colors.text }]}>After using any mode:</Text>
             <Text style={[styles.infoText, { color: colors.dim, marginTop: 8 }]}>
               1. Place a hand on your chest.{"\n"}
-              2. Breathe once for gratitude: "Thanks for showing up."{"\n"}
-              3. Whisper: "Back to center."
+              2. Breathe once for gratitude: &quot;Thanks for showing up.&quot;{"\n"}
+              3. Whisper: &quot;Back to center.&quot;
             </Text>
             <Text style={[styles.infoText, { color: colors.dim, marginTop: 8, fontStyle: 'italic' }]}>
-              That closes the loop and keeps roles from blending or overstaying — you choose them, they don't take over.
+              That closes the loop and keeps roles from blending or overstaying — you choose them, they don&apos;t take over.
             </Text>
           </View>
 

@@ -1,195 +1,132 @@
-# PDA.OK Production Deployment Guide
+# PDA.OK Android build and installation
 
-## ✅ Production Configuration Complete
+## Current checkpoint — November 17, 2026
 
-Your app has been configured for production deployment to the Google Play Store.
+The app uses Expo SDK 54, React Native 0.81.5, and a native Android home-screen
+widget. Expo Go cannot load that custom widget module. An EAS preview build
+creates an installable APK that runs without a development server.
 
----
+The package versions and lockfile have been aligned with SDK 54. GitHub Actions
+checks package compatibility, TypeScript, lint, Android native configuration,
+and the Android JavaScript bundle on pushes and pull requests. Native compilation and phone testing are separate
+checks; passing a JavaScript bundle does not prove an APK works on a phone.
 
-## 📋 Configuration Summary
+Verified locally during the repair: Expo Doctor passed 18/18 checks, TypeScript
+passed, lint had zero errors (129 existing warnings), the Android Hermes bundle
+exported, and Android prebuild completed in a temporary copy. Native Gradle
+compilation and installed-APK phone tests are still pending.
 
-### **eas.json**
-- ✅ Production build profile configured
-- ✅ Build type set to `app-bundle` (AAB format required by Play Store)
+The earlier closing note in FINAL.md predates the AI Connection settings and
+latest widget persistence changes. AI settings now support OpenRouter and OpenAI
+with a key entered inside the app; no developer API key needs to be bundled.
 
-### **app.json**
-- ✅ `EXPO_PUBLIC_TEST_MODE` set to `"false"`
-- ✅ Version: `1.0.0`
-- ✅ Android `versionCode`: `1`
-- ✅ Package name: `com.michaelmistree.pdataskapp`
-- ⚠️ `EXPO_PUBLIC_ANALYSIS_URL` is empty (set this if you need analytics)
+## Existing app identity
 
-### **Environment Variables**
-- `TEST_MODE`: Will be `false` in production builds
-- `ANALYSIS_URL`: Currently empty string (optional)
+Keep these values when building an update for existing installations:
 
----
+- Android package: `com.michaelmistree.pdataskapp`
+- Expo project: `8ee41b0c-cac2-4fd3-a68b-dac31cbe0c53`
+- Deep-link scheme: `pdaok`
+- App version: `1.0.0`; Android version code: `1`
 
-## 🚀 Build and Submit Commands
+Use the existing Android signing key too. A different signing key cannot update
+an existing installation. Journal data lives in device AsyncStorage; there is
+currently no in-app export/import feature. Keep the existing installation while
+checking the update path. An APK has its own storage, separate from Expo Go.
 
-### **1. Build Production AAB**
+## Before building
 
-Build an Android App Bundle for final testing:
-
-```bash
-npx eas-cli build -p android --profile production
-```
-
-This will:
-- Create an optimized AAB file
-- Use the production configuration
-- Upload to EAS servers for building
-- Provide a download link when complete
-
-**Estimated time:** 10-20 minutes
-
----
-
-### **2. Test the Production Build**
-
-Before submitting to Play Store, you should test the production build:
-
-1. Download the AAB from EAS
-2. Upload to Google Play Console's **Internal Testing** track
-3. Install on test devices via Play Store
-4. Verify all features work correctly with `TEST_MODE=false`
-
----
-
-### **3. Submit to Play Store**
-
-When ready for production release:
+Use Node.js 22 LTS and the committed npm lockfile:
 
 ```bash
-npx eas-cli submit -p android --latest
+npm ci
+npx expo install --check
+npx expo-doctor
+npm run typecheck
+npm run lint
+npx expo prebuild --platform android --no-install
+npx expo export --platform android --output-dir dist
 ```
 
-This will:
-- Take the most recent production build
-- Submit it directly to Google Play Console
-- Require you to have configured Play Store credentials in EAS
+The first repair review found the computer logged into an Expo account without
+access to the linked project, and no `EXPO_TOKEN` secret in this GitHub repository.
+Access to that existing project must be restored before a cloud APK can be built.
+Do not replace its project ID to work around an account error.
 
-**Alternative:** Manually upload the AAB to Play Console if you prefer.
+Check the active account and project:
 
----
-
-## 📝 Pre-Submission Checklist
-
-Before submitting to Play Store, ensure you have:
-
-### **Google Play Console Setup**
-- [ ] Created app listing in Play Console
-- [ ] Uploaded app icon (512x512 PNG)
-- [ ] Written app description and short description
-- [ ] Added screenshots (minimum 2, recommended 4-8)
-- [ ] Set content rating
-- [ ] Configured privacy policy URL (if applicable)
-- [ ] Set up pricing and distribution
-
-### **App Store Assets**
-- [ ] Feature graphic (1024x500)
-- [ ] Screenshots for different device sizes
-- [ ] Promotional video (optional)
-
-### **Testing**
-- [ ] Tested production build on multiple devices
-- [ ] Verified all time-of-day transitions work
-- [ ] Tested all action buttons (did it, skipped, forgot, couldn't, not relevant)
-- [ ] Confirmed toast messages appear correctly
-- [ ] Verified data persistence (AsyncStorage)
-- [ ] Tested with `TEST_MODE=false`
-
----
-
-## 🔄 Version Management
-
-For future updates:
-
-### **Increment Version Numbers**
-
-Before each new release, update in `app.json`:
-
-```json
-{
-  "expo": {
-    "version": "1.0.1",  // Human-readable version
-    "android": {
-      "versionCode": 2   // Must increment with each release
-    }
-  }
-}
+```bash
+npx eas-cli@27.10.0 whoami
+npx eas-cli@27.10.0 project:info
 ```
 
-**Important:** `android.versionCode` must be incremented for every Play Store submission.
+If access is denied, use `npx eas-cli@27.10.0 login` to sign into the account that
+owns the original project, or have that owner grant the current account access.
+Passwords and tokens must never be put into source files. Login details were
+removed from the old GitHub workflow during this repair; the exposed password
+still needs rotating because removing it does not erase Git history.
 
----
+## Make a standalone APK
 
-## 🐛 Troubleshooting
+Once the existing project and signing credentials are accessible:
 
-### **Build Fails**
-- Check EAS build logs for specific errors
-- Verify all dependencies are compatible
-- Ensure `eas.json` is properly formatted
+```bash
+npx eas-cli@27.10.0 build --platform android --profile preview
+```
 
-### **Submission Fails**
-- Verify Play Console credentials are configured
-- Check that `versionCode` is higher than previous submissions
-- Ensure package name matches Play Console app
+The `preview` profile in eas.json requests an internally distributed APK. Download
+it from the completed Expo build page and install it on an Android phone. It does
+not need Expo Go, a QR development session, or the computer to remain running.
 
-### **App Crashes in Production**
-- Check if `TEST_MODE` logic is causing issues
-- Review error logs in Play Console
-- Test with production build locally first
+## Build through GitHub
 
----
+The workflow is `.github/workflows/build-android.yml`.
 
-## 📊 Analytics Setup (Optional)
+1. Generate an Expo access token for an account authorized on the existing project.
+2. Add it as the repository Actions secret `EXPO_TOKEN`. For example, run
+   `gh secret set EXPO_TOKEN --repo GenuineJaded/PDAOK` and enter the token privately.
+3. Ensure the original Android signing credentials are configured in that Expo
+   project. A non-interactive CI run cannot answer first-time credential prompts.
+4. In GitHub Actions, open **Android checks and APK**, then select **Run workflow**
+   on `main`. Command-line equivalent:
 
-If you want to use the `ANALYSIS_URL` feature:
-
-1. Set up your analytics endpoint
-2. Update `app.json`:
-   ```json
-   "EXPO_PUBLIC_ANALYSIS_URL": "https://your-analytics-endpoint.com"
+   ```bash
+   gh workflow run build-android.yml --repo GenuineJaded/PDAOK --ref main
    ```
-3. Rebuild and resubmit
 
----
+5. After validation and the EAS build succeed, download the **PDA.OK-android-apk**
+   artifact from that run. It contains **PDA.OK.apk**.
 
-## 🌟 Current App State
+Ordinary pushes run validation only. Manual runs build with the `preview` profile
+and download the result of that specific build, rather than whichever unrelated
+build happens to be newest in the account.
 
-Your PDA.OK app includes:
+## Phone checks before calling the APK ready
 
-### **Core Features**
-- Time-of-day responsive UI (morning, afternoon, evening, late)
-- Four container categories (Substances, Archetypes, Patterns, Nourish)
-- Personal Moments and Resonant Field task organization
-- Dynamic font sizing based on content length
-- No-scroll fixed layout
+- Open the app with no computer or Metro server running.
+- Check both a fresh installation and the update path with existing journal data.
+- Log a substance, nourishment, and movement; close and reopen the app and verify
+  that each entry remains.
+- Add the Quip widget. Test all three buttons with the app closed and already open.
+  Check save, cancel, repeated taps, and returning to the launcher without losing
+  a saved entry.
+- Open journal entry details from the Substances screen. A historical tap issue
+  remains recorded in todo.md and needs device verification.
+- Start a short timer, grant notifications if requested, background the app, and
+  verify the notification arrives.
+- Confirm logging works with no AI key. If using AI, save a provider/key/model in
+  AI Connection and use its Test button. This sends a request to that provider.
 
-### **Micro-Feedback System**
-- **"Did It"**: "Completion hums softly through the weave." (ring pulse animation)
-- **"Skipped"**: "Noted. You're staying fluid." (ripple effect)
-- **"Forgot"**: "Forgetfulness is part of rhythm. Remembering returns." (shimmer)
-- **"Couldn't"**: "The field holds what couldn't move today." (dim effect)
-- **"Not Relevant"**: "Noted. The current carries on." (horizontal shimmer)
+## Play Store builds
 
-### **Visual Design**
-- Time-responsive toast backgrounds (90% opacity)
-- Improved label colors for morning/afternoon visibility
-- Bottom-positioned toasts with slide-up animation
-- Ring pulse for completion acknowledgment
+The `production` profile produces an AAB for Google Play, rather than a directly
+installable APK:
 
----
+```bash
+npx eas-cli@27.10.0 build --platform android --profile production
+```
 
-## 📞 Support
-
-If you encounter issues during deployment:
-
-1. Check EAS documentation: https://docs.expo.dev/eas/
-2. Review Play Console help: https://support.google.com/googleplay/android-developer
-3. Check build logs in EAS dashboard
-
----
-
-**Good luck with your launch! 🌬️✨**
+A Play Store release is a separate step: verify the existing listing and signing
+configuration, increment the Android version code beyond the last published
+release, and complete the current store requirements. No store submission is
+part of this build repair.
